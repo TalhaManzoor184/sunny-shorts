@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "full = real episode, public at 3 PM · publish-now = real episode, public immediately · no-upload = real episode, no YouTube · test = sample script + robot voice, needs no keys"
+        description: "full = real episode, public at 3 PM · publish-now = real episode, public immediately · no-upload = real episode, no YouTube · test = sample script + robot voice, needs no keys · upload-test = sample + robot voice uploaded PRIVATE, checks YouTube keys without using Gemini"
         type: choice
-        options: [full, publish-now, no-upload, test]
+        options: [full, publish-now, no-upload, test, upload-test]
         default: test
 
 permissions:
@@ -73,6 +73,7 @@ jobs:
             test)      npm run episode -- --sample --tts=espeak --no-upload ;;
             no-upload) npm run episode -- --no-upload ;;
             publish-now) UPLOAD_MODE=public npm run episode ;;
+            upload-test) UPLOAD_MODE=private npm run episode -- --sample --tts=espeak ;;
             *)         npm run episode ;;
           esac
 

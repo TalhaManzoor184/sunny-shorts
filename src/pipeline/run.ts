@@ -7,7 +7,7 @@ import { appendHistory, loadHistory } from "./history";
 import { mouthCues } from "./lipsync";
 import { renderEpisode } from "./render";
 import { writeScript } from "./script";
-import { voiceLine } from "./tts";
+import { voiceEpisode } from "./tts";
 import { uploadShort } from "./upload";
 
 /**
@@ -69,11 +69,16 @@ async function main() {
   await fs.mkdir(publicDir, { recursive: true });
   await fs.writeFile(path.join(runDir, "script.json"), JSON.stringify(script, null, 2));
 
-  // 2 + 3. Voice and lip sync, one line at a time
+  // 2 + 3. Voice (one request for the whole episode where possible), then lip sync per line
+  const files = script.beats.map((_, i) => `line-${String(i + 1).padStart(2, "0")}.wav`);
+  const voices = await voiceEpisode(
+    script.beats.map((b) => b.line),
+    files.map((f) => path.join(publicDir, f)),
+  );
   const beats: RenderedBeat[] = [];
   for (const [i, beat] of script.beats.entries()) {
-    const file = `line-${String(i + 1).padStart(2, "0")}.wav`;
-    const voiced = await voiceLine(beat.line, path.join(publicDir, file));
+    const file = files[i];
+    const voiced = voices[i];
     const cues = await mouthCues(voiced.wavPath, beat.line);
     beats.push({ ...beat, audioFile: file, duration: voiced.duration, words: voiced.words, mouthCues: cues });
     console.log(`  line ${i + 1}: ${voiced.duration.toFixed(2)}s, ${cues.length} mouth cues — "${beat.line}"`);
