@@ -15,7 +15,9 @@ export function req(name: string): string {
 }
 
 export const config = {
-  // Script writer
+  // Script writer: gemini (default) or claude
+  scriptProvider: opt("SCRIPT_PROVIDER", "gemini") as "gemini" | "claude",
+  geminiTextModel: opt("GEMINI_TEXT_MODEL", "gemini-3.8-flash"),
   anthropicModel: opt("ANTHROPIC_MODEL", "claude-sonnet-5-5"),
 
   // Voice

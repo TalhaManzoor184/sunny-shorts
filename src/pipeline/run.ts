@@ -59,7 +59,7 @@ async function main() {
     script = EpisodeScript.parse(JSON.parse(await fs.readFile(scriptPath, "utf8")));
     console.log(`Script: loaded ${path.relative(process.cwd(), scriptPath)}`);
   } else {
-    console.log(`Script: asking ${config.anthropicModel}…`);
+    console.log(`Script: asking ${config.scriptProvider === "claude" ? config.anthropicModel : config.geminiTextModel}…`);
     script = await writeScript(history);
   }
   console.log(`  "${script.title}" — ${script.theme} — ${script.beats.length} lines`);

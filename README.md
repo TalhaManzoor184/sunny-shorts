@@ -5,7 +5,7 @@ A daily YouTube Shorts pipeline for **Sunny the Dancing Star**, a cartoon for ki
 Each run takes about 3–5 minutes:
 
 ```
-Claude writes the script ─► Gemini TTS voices each line ─► Rhubarb makes mouth shapes
+Gemini writes the script ─► Gemini TTS voices each line ─► Rhubarb makes mouth shapes
         ─► Remotion renders a 1080×1920 MP4 ─► YouTube API uploads it (made for kids)
 ```
 
@@ -16,14 +16,14 @@ episode. Only his pose, expression and mouth change.
 
 | Path | What it does |
 | --- | --- |
-| `character/bible.md` | Sunny's personality, audience rules and theme list. Sent to Claude every run. Edit this to steer the show. |
+| `character/bible.md` | Sunny's personality, audience rules and theme list. Sent to the script writer every run. Edit this to steer the show. |
 | `src/remotion/` | The video: Sunny rig, scenes (park, bedroom, rainbow), captions, end card. |
 | `src/pipeline/run.ts` | The daily run: script → voice → lip sync → render → upload. |
-| `src/pipeline/script.ts` | Claude call. Returns a validated episode script. |
+| `src/pipeline/script.ts` | Script writer: Gemini (default) or Claude. Returns a validated episode script. |
 | `src/pipeline/tts.ts` | Voice: Gemini TTS (default) or ElevenLabs, plus an offline `espeak` voice for testing. |
 | `src/pipeline/lipsync.ts` | Runs Rhubarb Lip Sync on each line. |
 | `src/pipeline/upload.ts` | YouTube upload, marked made for kids, scheduled publish. |
-| `data/history.json` | Past episodes, so Claude doesn't repeat themes. Committed back by the workflow. |
+| `data/history.json` | Past episodes, so the writer doesn't repeat themes. Committed back by the workflow. |
 | `data/sample-episode.json` | A hand-written episode for testing without API keys. |
 | `assets/music/` | Optional. Drop royalty-free music files here; one is picked at random, mixed quietly. |
 | `.github/workflows/daily-episode.yml` | Runs every day at 1:13 PM Pakistan time; the Short goes public at 3:00 PM. |
@@ -39,7 +39,7 @@ cp .env.example .env
 
 npm run episode:sample      # sample script + robot voice, no keys needed, no upload
 npm run studio              # open Remotion Studio to tweak the animation
-npm run episode -- --no-upload   # real run with Claude + Gemini voice, skip YouTube
+npm run episode -- --no-upload   # real run with Gemini script + voice, skip YouTube
 npm run episode             # full run
 ```
 
@@ -47,11 +47,10 @@ Output goes to `out/<date>-<title>/episode.mp4`, next to `script.json` and `prop
 
 ## One-time setup
 
-### 1. Claude
-Create an API key at console.anthropic.com and set `ANTHROPIC_API_KEY`.
-
-### 2. Voice (Gemini TTS)
-Get an API key at aistudio.google.com and set `GEMINI_API_KEY`. Try a few upbeat voices
+### 1–2. Gemini (script and voice)
+Get an API key at aistudio.google.com and set `GEMINI_API_KEY`. The same key writes the script
+(`gemini-3.8-flash`) and voices it. To use Claude for scripts instead, set `SCRIPT_PROVIDER=claude`
+and `ANTHROPIC_API_KEY` (from platform.claude.com). Try a few upbeat voices
 (`GEMINI_VOICE`: Puck, Leda, Sadachbia, Laomedeia, Fenrir) with `npm run episode -- --sample --no-upload`,
 pick one, and keep it forever; the voice is part of Sunny's identity. `GEMINI_STYLE` sets the delivery
 for every line, and `VOICE_PITCH=1.1` raises the pitch a little if the voice sounds too grown-up.
@@ -75,9 +74,9 @@ Quota: the default YouTube API quota easily covers one upload a day.
 ### 4. GitHub Actions
 In the GitHub repo, add under Settings → Secrets and variables → Actions:
 
-- Secrets: `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`,
+- Secrets: `GEMINI_API_KEY`,
   `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`
-- Variables (optional): `GEMINI_VOICE`, `VOICE_PITCH`, `UPLOAD_MODE`, `PUBLISH_TIME`, `PUBLISH_DELAY_DAYS`, `ANTHROPIC_MODEL`
+- Variables (optional): `GEMINI_VOICE`, `VOICE_PITCH`, `UPLOAD_MODE`, `PUBLISH_TIME`, `PUBLISH_DELAY_DAYS`, `SCRIPT_PROVIDER`
 
 Run it once by hand from the Actions tab (**Daily Sunny episode → Run workflow**, mode `test`
 first, then `no-upload`). The MP4 is attached to each run as a download for 14 days.
@@ -94,8 +93,9 @@ edit it if something is off. To get a full day to review instead, set the reposi
 
 Manual runs (Actions → Daily Sunny episode → Run workflow) have three modes:
 - `test`: sample script and robot voice. Needs no keys. Use it to check the setup.
-- `no-upload`: real Claude script and Gemini voice, no YouTube. The MP4 is in the run's artifacts.
-- `full`: the same as the daily run.
+- `no-upload`: real Gemini script and voice, no YouTube. The MP4 is in the run's artifacts.
+- `full`: the same as the daily run (public at 3 PM).
+- `publish-now`: like `full`, but public as soon as it's uploaded.
 
 ## Content rules that matter
 
