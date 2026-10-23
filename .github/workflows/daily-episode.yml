@@ -1,0 +1,95 @@
+name: Daily Sunny episode
+
+on:
+  schedule:
+    # 08:13 UTC = 1:13 PM Pakistan time. Render takes ~5 min; the Short is uploaded private
+    # and YouTube makes it public at PUBLISH_TIME (3:00 PM PKT). GitHub can start cron jobs
+    # late at busy times, so the 2-hour gap keeps 3 PM safe.
+    - cron: "13 8 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "full = real episode + upload · no-upload = real episode, no YouTube · test = sample script + robot voice, needs no keys"
+        type: choice
+        options: [full, no-upload, test]
+        default: test
+
+permissions:
+  contents: write # to commit data/history.json
+
+concurrency:
+  group: daily-episode
+  cancel-in-progress: false
+
+env:
+  # Change these in Settings → Secrets and variables → Actions → Variables, or edit here.
+  UPLOAD_MODE: ${{ vars.UPLOAD_MODE || 'schedule' }}
+  PUBLISH_TIME: ${{ vars.PUBLISH_TIME || '15:00' }}
+  PUBLISH_UTC_OFFSET: ${{ vars.PUBLISH_UTC_OFFSET || '5' }}
+  PUBLISH_DELAY_DAYS: ${{ vars.PUBLISH_DELAY_DAYS || '0' }}
+  TTS_PROVIDER: ${{ vars.TTS_PROVIDER || 'gemini' }}
+  GEMINI_VOICE: ${{ vars.GEMINI_VOICE || 'Puck' }}
+  VOICE_PITCH: ${{ vars.VOICE_PITCH || '1.0' }}
+  ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
+
+jobs:
+  episode:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install system tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg espeak-ng \
+            libnss3 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 libgbm1 libasound2t64 \
+            libxrandr2 libxkbcommon0 libxfixes3 libxcomposite1 libxdamage1 libpango-1.0-0 libcairo2 libcups2t64
+          curl -sSL -o /tmp/rhubarb.zip https://github.com/DanielSWolf/rhubarb-lip-sync/releases/download/v1.13.0/Rhubarb-Lip-Sync-1.13.0-Linux.zip
+          unzip -q /tmp/rhubarb.zip -d /opt
+          echo "RHUBARB_PATH=/opt/Rhubarb-Lip-Sync-1.13.0-Linux/rhubarb" >> "$GITHUB_ENV"
+
+      - run: npm ci
+
+      - name: Make episode
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          MODE: ${{ github.event_name == 'schedule' && 'full' || inputs.mode }}
+        run: |
+          case "$MODE" in
+            test)      npm run episode -- --sample --tts=espeak --no-upload ;;
+            no-upload) npm run episode -- --no-upload ;;
+            *)         npm run episode ;;
+          esac
+
+      - name: Keep the video for 14 days
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: episode-${{ github.run_number }}
+          path: |
+            out/*/episode.mp4
+            out/*/script.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Save episode history
+        run: |
+          git config user.name "sunny-bot"
+          git config user.email "sunny-bot@users.noreply.github.com"
+          git add data/history.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Episode $(date -u +%F)"
+            git push
+          fi

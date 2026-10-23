@@ -1,0 +1,17 @@
+{
+  "title": "Brush Your Teeth with Sunny! Swish Swish! 🪥",
+  "description": "Sunny wakes up and shows little ones how to brush their teeth, up and down and round and round. A happy morning routine to copy along.",
+  "tags": ["brush your teeth", "kids morning routine", "good habits for kids", "toddler songs", "preschool learning", "Sunny the star", "cartoon for kids", "healthy habits", "nursery", "shorts for kids"],
+  "theme": "brushing teeth (morning routine)",
+  "scene": "bedroom",
+  "beats": [
+    { "line": "Yawn! Good morning, friends! Guess what time it is?", "expression": "surprised", "action": "wave" },
+    { "line": "It's brush-your-teeth time! Grab your toothbrush!", "expression": "happy", "action": "jump" },
+    { "line": "Brush up and down. Up and down. Swish, swish!", "expression": "happy", "action": "dance" },
+    { "line": "Now round and round, like a little train. Choo choo!", "expression": "wink", "action": "spin" },
+    { "line": "Oops! I brushed my nose! Silly Sunny!", "expression": "laughing", "action": "jump" },
+    { "line": "Now show me your big, shiny smile!", "expression": "happy", "action": "dance", "scene": "park" },
+    { "line": "Wow! You sparkle just like me!", "expression": "surprised", "action": "wave", "scene": "park" },
+    { "line": "Shine, shine, Sunny!", "expression": "laughing", "action": "jump", "scene": "rainbow" }
+  ]
+}

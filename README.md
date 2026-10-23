@@ -1,0 +1,109 @@
+# Sunny Shorts
+
+A daily YouTube Shorts pipeline for **Sunny the Dancing Star**, a cartoon for kids aged 3–8.
+
+Each run takes about 3–5 minutes:
+
+```
+Claude writes the script ─► Gemini TTS voices each line ─► Rhubarb makes mouth shapes
+        ─► Remotion renders a 1080×1920 MP4 ─► YouTube API uploads it (made for kids)
+```
+
+Sunny is drawn in code (`src/remotion/sunny/Sunny.tsx`), so he looks exactly the same in every
+episode. Only his pose, expression and mouth change.
+
+## Project layout
+
+| Path | What it does |
+| --- | --- |
+| `character/bible.md` | Sunny's personality, audience rules and theme list. Sent to Claude every run. Edit this to steer the show. |
+| `src/remotion/` | The video: Sunny rig, scenes (park, bedroom, rainbow), captions, end card. |
+| `src/pipeline/run.ts` | The daily run: script → voice → lip sync → render → upload. |
+| `src/pipeline/script.ts` | Claude call. Returns a validated episode script. |
+| `src/pipeline/tts.ts` | Voice: Gemini TTS (default) or ElevenLabs, plus an offline `espeak` voice for testing. |
+| `src/pipeline/lipsync.ts` | Runs Rhubarb Lip Sync on each line. |
+| `src/pipeline/upload.ts` | YouTube upload, marked made for kids, scheduled publish. |
+| `data/history.json` | Past episodes, so Claude doesn't repeat themes. Committed back by the workflow. |
+| `data/sample-episode.json` | A hand-written episode for testing without API keys. |
+| `assets/music/` | Optional. Drop royalty-free music files here; one is picked at random, mixed quietly. |
+| `.github/workflows/daily-episode.yml` | Runs every day at 1:13 PM Pakistan time; the Short goes public at 3:00 PM. |
+
+## Run it locally
+
+Needs Node 22, `ffmpeg`, and [Rhubarb Lip Sync 1.13](https://github.com/DanielSWolf/rhubarb-lip-sync/releases) on your PATH
+(or set `RHUBARB_PATH`). For the offline test voice, also install `espeak-ng`.
+
+```bash
+npm install
+cp .env.example .env
+
+npm run episode:sample      # sample script + robot voice, no keys needed, no upload
+npm run studio              # open Remotion Studio to tweak the animation
+npm run episode -- --no-upload   # real run with Claude + Gemini voice, skip YouTube
+npm run episode             # full run
+```
+
+Output goes to `out/<date>-<title>/episode.mp4`, next to `script.json` and `props.json`.
+
+## One-time setup
+
+### 1. Claude
+Create an API key at console.anthropic.com and set `ANTHROPIC_API_KEY`.
+
+### 2. Voice (Gemini TTS)
+Get an API key at aistudio.google.com and set `GEMINI_API_KEY`. Try a few upbeat voices
+(`GEMINI_VOICE`: Puck, Leda, Sadachbia, Laomedeia, Fenrir) with `npm run episode -- --sample --no-upload`,
+pick one, and keep it forever; the voice is part of Sunny's identity. `GEMINI_STYLE` sets the delivery
+for every line, and `VOICE_PITCH=1.1` raises the pitch a little if the voice sounds too grown-up.
+
+Gemini returns no word timings, so captions are timed by word length. The mouth is still exact,
+because Rhubarb reads the audio itself. If you want frame-exact captions, switch to ElevenLabs:
+`TTS_PROVIDER=elevenlabs` plus `ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID`.
+
+### 3. YouTube
+1. In Google Cloud Console, create a project and enable **YouTube Data API v3**.
+2. OAuth consent screen: External, add yourself as a test user, add scope `youtube.upload`.
+   Then **publish the app** (Testing mode refresh tokens expire after 7 days).
+3. Credentials → Create OAuth client ID → **Desktop app**. Put the ID and secret in `.env`.
+4. Run `npm run auth:youtube` on your computer, approve with the channel's Google account,
+   and copy the printed `YOUTUBE_REFRESH_TOKEN` into `.env`.
+5. Submit the **YouTube API Services audit form** for the project. Until the audit passes, every
+   video uploaded through the API is locked to private, whatever `UPLOAD_MODE` says.
+
+Quota: the default YouTube API quota easily covers one upload a day.
+
+### 4. GitHub Actions
+In the GitHub repo, add under Settings → Secrets and variables → Actions:
+
+- Secrets: `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`,
+  `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`
+- Variables (optional): `GEMINI_VOICE`, `VOICE_PITCH`, `UPLOAD_MODE`, `PUBLISH_TIME`, `PUBLISH_DELAY_DAYS`, `ANTHROPIC_MODEL`
+
+Run it once by hand from the Actions tab (**Daily Sunny episode → Run workflow**, mode `test`
+first, then `no-upload`). The MP4 is attached to each run as a download for 14 days.
+
+## Daily schedule
+
+The workflow starts at **1:13 PM Pakistan time** every day. It makes the episode, uploads it as
+**private**, and YouTube makes it public at **3:00 PM** (`PUBLISH_TIME`). If a run finishes after
+3 PM (for example a manual run in the evening), the video is scheduled for 3 PM the next day.
+
+Between upload and 3 PM you can watch it in YouTube Studio (Content → Scheduled) and delete or
+edit it if something is off. To get a full day to review instead, set the repository variable
+`PUBLISH_DELAY_DAYS=1`.
+
+Manual runs (Actions → Daily Sunny episode → Run workflow) have three modes:
+- `test`: sample script and robot voice. Needs no keys. Use it to check the setup.
+- `no-upload`: real Claude script and Gemini voice, no YouTube. The MP4 is in the run's artifacts.
+- `full`: the same as the daily run.
+
+## Content rules that matter
+
+- **Made for kids.** Every upload sets `selfDeclaredMadeForKids: true`. This is required by
+  YouTube's COPPA rules for content aimed at 3–8 year olds. It turns off comments and
+  personalised ads, and lowers revenue per view. Don't turn it off.
+- **Mass-produced content.** YouTube can refuse monetisation for repetitive, template-made
+  videos. The theme rotation, the history check and the varied scenes help, but the strongest
+  signal is a human looking at each episode. Use the review window, and every so often make a
+  special episode by hand with `--script=my-episode.json`.
+- **Music.** Only use tracks you have a licence for (YouTube Audio Library is safe).

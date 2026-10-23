@@ -1,0 +1,16 @@
+{
+  "title": "Count to Five with Sunny! Clap Clap! ⭐",
+  "description": "Sunny the little star counts to five with claps and jumps. A bouncy way for little ones to practise counting and move along.",
+  "tags": ["counting for kids", "count to 5", "kids songs", "toddler learning", "preschool", "nursery", "cartoon for kids", "Sunny the star", "learn numbers", "shorts for kids"],
+  "theme": "counting to five with claps",
+  "scene": "park",
+  "beats": [
+    { "line": "Boing! Good morning, friends! It's me, Sunny!", "expression": "surprised", "action": "jump" },
+    { "line": "Today we count to five. Ready? Clap with me!", "expression": "happy", "action": "wave" },
+    { "line": "One! Two! Three!", "expression": "happy", "action": "dance" },
+    { "line": "Four! Five! Six! Oops, that's too many!", "expression": "laughing", "action": "spin" },
+    { "line": "Let's try again. One, two, three, four, five!", "expression": "wink", "action": "dance", "scene": "rainbow" },
+    { "line": "Yay! You did it! Great counting, friends!", "expression": "happy", "action": "dance", "scene": "rainbow" },
+    { "line": "Shine, shine, Sunny!", "expression": "laughing", "action": "jump", "scene": "rainbow" }
+  ]
+}
