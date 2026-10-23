@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 import type { WordTiming } from "../shared/episode";
 import { durationOf, ffmpeg, toEpisodeWav } from "./audio";
 import { config, req } from "./config";
+import { isTransient, withRetry } from "./retry";
 
 const run = promisify(execFile);
 
@@ -68,9 +69,19 @@ async function elevenlabs(text: string, rawPath: string): Promise<WordTiming[] |
  * Gemini gives no word timings, so captions use the estimate; Rhubarb still drives the mouth exactly.
  */
 async function gemini(text: string, rawPath: string): Promise<null> {
+  try {
+    return await withRetry(`voice (${config.geminiModel})`, () => geminiOnce(config.geminiModel, text, rawPath));
+  } catch (err) {
+    if (!isTransient(err) || !config.geminiTtsFallback) throw err;
+    console.warn(`  ${config.geminiModel} is busy; using ${config.geminiTtsFallback}`);
+    return await withRetry(`voice (${config.geminiTtsFallback})`, () => geminiOnce(config.geminiTtsFallback, text, rawPath));
+  }
+}
+
+async function geminiOnce(model: string, text: string, rawPath: string): Promise<null> {
   const ai = new GoogleGenAI({ apiKey: req("GEMINI_API_KEY") });
   const interaction = await ai.interactions.create({
-    model: config.geminiModel,
+    model,
     input: [
       {
         type: "user_input",

@@ -18,11 +18,15 @@ export const config = {
   // Script writer: gemini (default) or claude
   scriptProvider: opt("SCRIPT_PROVIDER", "gemini") as "gemini" | "claude",
   geminiTextModel: opt("GEMINI_TEXT_MODEL", "gemini-3.8-flash"),
+  /** Used when the main text model stays overloaded after retries. Empty to disable. */
+  geminiTextFallback: opt("GEMINI_TEXT_FALLBACK", "gemini-3.5-flash-lite"),
   anthropicModel: opt("ANTHROPIC_MODEL", "claude-sonnet-5-5"),
 
   // Voice
   ttsProvider: opt("TTS_PROVIDER", "gemini") as "gemini" | "elevenlabs" | "espeak",
   geminiModel: opt("GEMINI_TTS_MODEL", "gemini-3.8-flash-tts"),
+  /** Used when the main TTS model stays overloaded after retries. Empty to disable. */
+  geminiTtsFallback: opt("GEMINI_TTS_FALLBACK", "gemini-3.8-flash-lite-tts"),
   /** Prebuilt voice. Upbeat/youthful ones suit Sunny: Puck, Leda, Sadachbia, Laomedeia, Fenrir. */
   geminiVoice: opt("GEMINI_VOICE", "Puck"),
   /** Delivery direction sent with every line (not spoken). */

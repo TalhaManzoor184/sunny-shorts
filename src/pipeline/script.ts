@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import { EpisodeScript } from "../shared/episode";
 import { config, req } from "./config";
 import type { HistoryEntry } from "./history";
+import { isTransient, withRetry } from "./retry";
 
 /** JSON Schema for one episode. Shared by both script writers. */
 const EPISODE_SCHEMA = {
@@ -69,15 +70,26 @@ async function askClaude(prompt: string): Promise<unknown> {
 
 async function askGemini(prompt: string): Promise<unknown> {
   const ai = new GoogleGenAI({ apiKey: req("GEMINI_API_KEY") });
-  const res = await ai.models.generateContent({
-    model: config.geminiTextModel,
-    contents: prompt + "\nReturn the episode as JSON matching the schema.",
-    config: {
-      responseMimeType: "application/json",
-      responseJsonSchema: EPISODE_SCHEMA,
-      temperature: 1,
-    },
-  });
+  const call = (model: string) =>
+    withRetry(`script (${model})`, () =>
+      ai.models.generateContent({
+        model,
+        contents: prompt + "\nReturn the episode as JSON matching the schema.",
+        config: {
+          responseMimeType: "application/json",
+          responseJsonSchema: EPISODE_SCHEMA,
+          temperature: 1,
+        },
+      }),
+    );
+  let res;
+  try {
+    res = await call(config.geminiTextModel);
+  } catch (err) {
+    if (!isTransient(err) || !config.geminiTextFallback) throw err;
+    console.warn(`  ${config.geminiTextModel} is busy; using ${config.geminiTextFallback}`);
+    res = await call(config.geminiTextFallback);
+  }
   const text = res.text;
   if (!text) throw new Error("Gemini returned an empty script.");
   return JSON.parse(text);
