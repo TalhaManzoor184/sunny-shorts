@@ -109,7 +109,19 @@ async function main() {
   console.log(`Done in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 }
 
+/** Short, readable error text. Google API errors carry the useful part in response.data. */
+function describe(err: unknown): string {
+  const e = err as { message?: string; response?: { status?: number; data?: unknown } };
+  const data = e?.response?.data ? ` | ${e.response.status} ${JSON.stringify(e.response.data)}` : "";
+  return `${e?.message ?? String(err)}${data}`.slice(0, 1500);
+}
+
 main().catch((err) => {
   console.error(err);
+  // On GitHub Actions, also raise an annotation so the error shows on the run's summary page.
+  if (process.env.GITHUB_ACTIONS) {
+    const msg = describe(err).replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
+    console.log(`::error title=Episode failed::${msg}`);
+  }
   process.exit(1);
 });
