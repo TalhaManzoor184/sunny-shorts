@@ -32,7 +32,7 @@ export const config = {
   /** Delivery direction sent with every line (not spoken). */
   geminiStyle: opt(
     "GEMINI_STYLE",
-    "bright, bouncy and playful, like a cheerful cartoon character talking to little kids; clear and not too fast",
+    "bright, upbeat and playful cartoon character with sitcom comic timing; clear and not too fast",
   ),
   elevenVoiceId: opt("ELEVENLABS_VOICE_ID"),
   elevenModel: opt("ELEVENLABS_MODEL", "eleven_multilingual_v2"),
@@ -56,6 +56,9 @@ export const config = {
   publishUtcOffset: Number(opt("PUBLISH_UTC_OFFSET", "5")),
   /** Days after the run to publish in schedule mode. */
   publishDelayDays: Number(opt("PUBLISH_DELAY_DAYS", "0")),
+  /** YouTube audience setting. Must match the content in character/bible.md:
+   *  "false" = general audience (current bible), "true" = content made for children. */
+  madeForKids: opt("MADE_FOR_KIDS", "false") === "true",
 
   paths: {
     bible: path.join(ROOT, "character/bible.md"),

@@ -1,12 +1,12 @@
 # Sunny Shorts
 
-A daily YouTube Shorts pipeline for **Sunny the Dancing Star**, a cartoon for kids aged 3–8.
+A daily YouTube Shorts pipeline for **Sunny the Dancing Star**, a cartoon comedy for a general audience.
 
 Each run takes about 3–5 minutes:
 
 ```
 Gemini writes the script ─► Gemini TTS voices each line ─► Rhubarb makes mouth shapes
-        ─► Remotion renders a 1080×1920 MP4 ─► YouTube API uploads it (made for kids)
+        ─► Remotion renders a 1080×1920 MP4 ─► YouTube API uploads it
 ```
 
 Sunny is drawn in code (`src/remotion/sunny/Sunny.tsx`), so he looks exactly the same in every
@@ -22,7 +22,7 @@ episode. Only his pose, expression and mouth change.
 | `src/pipeline/script.ts` | Script writer: Gemini (default) or Claude. Returns a validated episode script. |
 | `src/pipeline/tts.ts` | Voice: Gemini TTS (default) or ElevenLabs, plus an offline `espeak` voice for testing. |
 | `src/pipeline/lipsync.ts` | Runs Rhubarb Lip Sync on each line. |
-| `src/pipeline/upload.ts` | YouTube upload, marked made for kids, scheduled publish. |
+| `src/pipeline/upload.ts` | YouTube upload with the audience setting, scheduled publish. |
 | `data/history.json` | Past episodes, so the writer doesn't repeat themes. Committed back by the workflow. |
 | `data/sample-episode.json` | A hand-written episode for testing without API keys. |
 | `assets/music/` | Optional. Drop royalty-free music files here; one is picked at random, mixed quietly. |
@@ -99,9 +99,11 @@ Manual runs (Actions → Daily Sunny episode → Run workflow) have three modes:
 
 ## Content rules that matter
 
-- **Made for kids.** Every upload sets `selfDeclaredMadeForKids: true`. This is required by
-  YouTube's COPPA rules for content aimed at 3–8 year olds. It turns off comments and
-  personalised ads, and lowers revenue per view. Don't turn it off.
+- **Audience setting.** Uploads are marked *not made for kids* (`MADE_FOR_KIDS=false`) because
+  `character/bible.md` aims the show at teens and adults. The setting must match the content: if
+  you ever turn the bible back towards young children (counting, colours, nursery-style lessons,
+  talking to the viewer as a child), set the repository variable `MADE_FOR_KIDS=true` at the same
+  time. YouTube can override a wrong setting, and under COPPA the channel owner is responsible.
 - **Mass-produced content.** YouTube can refuse monetisation for repetitive, template-made
   videos. The theme rotation, the history check and the varied scenes help, but the strongest
   signal is a human looking at each episode. Use the review window, and every so often make a

@@ -63,6 +63,11 @@ async function main() {
     script = await writeScript(history);
   }
   console.log(`  "${script.title}" — ${script.theme} — ${script.beats.length} lines`);
+  if (process.env.GITHUB_ACTIONS) {
+    // Show the script on the run's summary page.
+    const body = script.beats.map((b) => b.line).join(" / ").replace(/[\r\n%]/g, " ");
+    console.log(`::notice title=${script.title.replace(/[:,\r\n%]/g, " ")}::${body}`);
+  }
 
   const runDir = path.join(config.paths.out, `${date}-${slug(script.title)}`);
   const publicDir = path.join(runDir, "public");

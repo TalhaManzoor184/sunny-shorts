@@ -22,9 +22,9 @@ export function publishAtIso(now = new Date()): string {
 
 const FOOTER = `
 
-Sunny is a cheerful little star who loves to sing, dance and make friends. A new adventure every day!
+Sunny the star vs. everyday life. A new short every day.
 
-#Shorts #KidsSongs #LearningForKids #Sunny`;
+#Shorts #Comedy #Relatable #Animation #Sunny`;
 
 export async function uploadShort(file: string, script: EpisodeScript): Promise<{ videoId: string; publishAt?: string }> {
   const yt = youtubeClient();
@@ -44,8 +44,8 @@ export async function uploadShort(file: string, script: EpisodeScript): Promise<
       status: {
         privacyStatus: config.uploadMode === "public" ? "public" : "private",
         publishAt,
-        // Content for ages 3–8 must be marked made for kids (COPPA).
-        selfDeclaredMadeForKids: true,
+        // Must match who the content is for (see MADE_FOR_KIDS in config and character/bible.md).
+        selfDeclaredMadeForKids: config.madeForKids,
         embeddable: true,
       },
     },

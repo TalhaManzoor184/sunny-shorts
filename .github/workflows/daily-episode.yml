@@ -30,6 +30,7 @@ env:
   TTS_PROVIDER: ${{ vars.TTS_PROVIDER || 'gemini' }}
   GEMINI_VOICE: ${{ vars.GEMINI_VOICE || 'Puck' }}
   VOICE_PITCH: ${{ vars.VOICE_PITCH || '1.0' }}
+  MADE_FOR_KIDS: ${{ vars.MADE_FOR_KIDS || 'false' }}
   SCRIPT_PROVIDER: ${{ vars.SCRIPT_PROVIDER || 'gemini' }}
   GEMINI_TEXT_MODEL: ${{ vars.GEMINI_TEXT_MODEL }}
   ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}

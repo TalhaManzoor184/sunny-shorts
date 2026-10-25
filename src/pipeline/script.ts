@@ -11,8 +11,8 @@ const EPISODE_SCHEMA = {
   type: "object",
   required: ["title", "description", "tags", "theme", "scene", "beats"],
   properties: {
-    title: { type: "string", description: "YouTube title, max 70 characters, fun and clear, no clickbait, ends with a relevant emoji." },
-    description: { type: "string", description: "2–3 short sentences for parents describing what kids learn. No links." },
+    title: { type: "string", description: "YouTube title, max 70 characters, relatable and funny, no clickbait, ends with a relevant emoji. Not aimed at children." },
+    description: { type: "string", description: "2–3 short, funny sentences describing the joke without spoiling the punchline. No links." },
     tags: { type: "array", items: { type: "string" }, description: "6–12 search tags." },
     theme: { type: "string", description: "The one idea of the episode, e.g. 'counting to 5 with claps'." },
     scene: { type: "string", enum: ["park", "bedroom", "rainbow"] },
@@ -23,7 +23,7 @@ const EPISODE_SCHEMA = {
         type: "object",
         required: ["line", "expression", "action"],
         properties: {
-          line: { type: "string", description: "What Sunny says. 3–14 words. Simple English for ages 3–8." },
+          line: { type: "string", description: "What Sunny says. 3–14 words. Punchy, conversational English." },
           expression: { type: "string", enum: ["happy", "wink", "surprised", "laughing"] },
           action: { type: "string", enum: ["idle", "dance", "wave", "jump", "spin"] },
           scene: { type: "string", enum: ["park", "bedroom", "rainbow"], description: "Optional set change for this line." },
@@ -36,7 +36,7 @@ const EPISODE_SCHEMA = {
 async function buildPrompt(history: HistoryEntry[]): Promise<string> {
   const bible = await fs.readFile(config.paths.bible, "utf8");
   const recent = history.slice(-30).map((h) => `- ${h.date}: ${h.title} (theme: ${h.theme})`).join("\n") || "- none yet";
-  return `You write daily YouTube Shorts episodes for a kids' cartoon.
+  return `You write daily YouTube Shorts comedy episodes for a cartoon character aimed at a general audience (teens and adults).
 
 <character_bible>
 ${bible}
@@ -49,7 +49,7 @@ ${recent}
 Write today's episode. Requirements:
 - Pick a theme that is NOT in the recent episodes list (vary the theme family too, not just the wording).
 - Total spoken words 55–100, so the Short lands between 20 and 45 seconds.
-- First line is the hook. Include one join-in moment and one small funny moment.
+- First line is the hook. Build to a clear punchline or twist near the end.
 - Match each line's expression and action to what Sunny is saying.
 - The last line is exactly "Shine, shine, Sunny!" with action "jump" and expression "laughing".
 - Do not ask viewers to like, comment or subscribe.`;
