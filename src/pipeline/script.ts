@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import { EpisodeScript } from "../shared/episode";
 import { config, req } from "./config";
 import type { HistoryEntry } from "./history";
-import { isTransient, withRetry } from "./retry";
+import { shouldFallBack, withRetry } from "./retry";
 
 /** JSON Schema for one episode. Shared by both script writers. */
 const EPISODE_SCHEMA = {
@@ -86,8 +86,8 @@ async function askGemini(prompt: string): Promise<unknown> {
   try {
     res = await call(config.geminiTextModel);
   } catch (err) {
-    if (!isTransient(err) || !config.geminiTextFallback) throw err;
-    console.warn(`  ${config.geminiTextModel} is busy; using ${config.geminiTextFallback}`);
+    if (!shouldFallBack(err) || !config.geminiTextFallback) throw err;
+    console.warn(`  ${config.geminiTextModel} is busy or out of quota; using ${config.geminiTextFallback}`);
     res = await call(config.geminiTextFallback);
   }
   const text = res.text;

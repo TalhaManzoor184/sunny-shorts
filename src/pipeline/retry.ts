@@ -10,6 +10,18 @@ export function isTransient(err: unknown): boolean {
   return false;
 }
 
+/** True when a model's quota is used up (per-day or per-minute). Another model has its own quota. */
+export function isQuota(err: unknown): boolean {
+  const e = err as { status?: number; code?: number; message?: string };
+  const msg = String(e?.message ?? err);
+  return e?.status === 429 || e?.code === 429 || /\b429\b|RESOURCE_EXHAUSTED|quota|rate limit/i.test(msg);
+}
+
+/** Worth switching to the fallback model: overloaded, or this model's quota is used up. */
+export function shouldFallBack(err: unknown): boolean {
+  return isTransient(err) || isQuota(err);
+}
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Retry `fn` on transient errors with backoff: 15 s, 30 s, 60 s, 120 s. */

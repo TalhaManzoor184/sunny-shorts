@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 import type { WordTiming } from "../shared/episode";
 import { durationOf, ffmpeg, toEpisodeWav } from "./audio";
 import { config, req } from "./config";
-import { isTransient, withRetry } from "./retry";
+import { shouldFallBack, withRetry } from "./retry";
 
 const run = promisify(execFile);
 
@@ -72,8 +72,8 @@ async function gemini(text: string, rawPath: string): Promise<null> {
   try {
     return await withRetry(`voice (${config.geminiModel})`, () => geminiOnce(config.geminiModel, text, rawPath));
   } catch (err) {
-    if (!isTransient(err) || !config.geminiTtsFallback) throw err;
-    console.warn(`  ${config.geminiModel} is busy; using ${config.geminiTtsFallback}`);
+    if (!shouldFallBack(err) || !config.geminiTtsFallback) throw err;
+    console.warn(`  ${config.geminiModel} is busy or out of quota; using ${config.geminiTtsFallback}`);
     return await withRetry(`voice (${config.geminiTtsFallback})`, () => geminiOnce(config.geminiTtsFallback, text, rawPath));
   }
 }
