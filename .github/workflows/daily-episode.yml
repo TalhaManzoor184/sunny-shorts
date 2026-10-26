@@ -31,6 +31,8 @@ env:
   GEMINI_VOICE: ${{ vars.GEMINI_VOICE || 'Puck' }}
   VOICE_PITCH: ${{ vars.VOICE_PITCH || '1.0' }}
   MADE_FOR_KIDS: ${{ vars.MADE_FOR_KIDS || 'false' }}
+  # TikTok is on hold. Set the repository variable TIKTOK_ENABLED=true to switch it on.
+  TIKTOK_ENABLED: ${{ vars.TIKTOK_ENABLED || 'false' }}
   TIKTOK_PRIVACY: ${{ vars.TIKTOK_PRIVACY || 'PUBLIC_TO_EVERYONE' }}
   SCRIPT_PROVIDER: ${{ vars.SCRIPT_PROVIDER || 'gemini' }}
   GEMINI_TEXT_MODEL: ${{ vars.GEMINI_TEXT_MODEL }}

@@ -12,6 +12,7 @@ import { config, req } from "./config";
 const API = "https://open.tiktokapis.com/v2";
 
 export function tiktokConfigured(): boolean {
+  if (process.env.TIKTOK_ENABLED !== "true") return false; // on hold unless switched on
   return Boolean(process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET && process.env.TIKTOK_REFRESH_TOKEN);
 }
 

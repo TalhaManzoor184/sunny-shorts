@@ -82,7 +82,10 @@ In the GitHub repo, add under Settings → Secrets and variables → Actions:
 Run it once by hand from the Actions tab (**Daily Sunny episode → Run workflow**, mode `test`
 first, then `no-upload`). The MP4 is attached to each run as a download for 14 days.
 
-### 5. TikTok (optional)
+### 5. TikTok (optional, currently on hold)
+TikTok is switched off. To turn it on, finish the steps below and set the repository variable
+`TIKTOK_ENABLED=true`.
+
 The same video is posted to TikTok right after the YouTube upload. TikTok has no scheduling in
 its API, so it goes live as soon as it is posted (around 1:20 PM), not at 3 PM.
 

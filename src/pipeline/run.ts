@@ -119,7 +119,7 @@ async function main() {
     // TikTok is optional and must never cost us the YouTube upload or the history entry.
     let tiktokPublishId: string | undefined;
     if (args.has("no-tiktok") || !tiktokConfigured()) {
-      console.log(`TikTok: skipped (${args.has("no-tiktok") ? "--no-tiktok" : "no TikTok secrets"})`);
+      console.log(`TikTok: skipped (${args.has("no-tiktok") ? "--no-tiktok" : "TIKTOK_ENABLED is not true or TikTok secrets are missing"})`);
     } else {
       try {
         const tt = await uploadTikTok(mp4, script, seconds);
