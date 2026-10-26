@@ -62,6 +62,8 @@ export const config = {
   /** TikTok visibility: PUBLIC_TO_EVERYONE, FOLLOWER_OF_CREATOR, MUTUAL_FOLLOW_FRIENDS or SELF_ONLY.
    *  Until TikTok audits your app, only SELF_ONLY is allowed and the pipeline falls back to it. */
   tiktokPrivacy: opt("TIKTOK_PRIVACY", "PUBLIC_TO_EVERYONE"),
+  /** Meta Graph API version for Facebook Reels. */
+  facebookGraphVersion: opt("FACEBOOK_GRAPH_VERSION", "v26.0"),
 
   paths: {
     bible: path.join(ROOT, "character/bible.md"),

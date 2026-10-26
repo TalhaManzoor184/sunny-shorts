@@ -23,6 +23,7 @@ episode. Only his pose, expression and mouth change.
 | `src/pipeline/tts.ts` | Voice: Gemini TTS (default) or ElevenLabs, plus an offline `espeak` voice for testing. |
 | `src/pipeline/lipsync.ts` | Runs Rhubarb Lip Sync on each line. |
 | `src/pipeline/upload.ts` | YouTube upload with the audience setting, scheduled publish. |
+| `src/pipeline/facebook.ts` | Facebook Page Reels, scheduled to the same time as YouTube. |
 | `src/pipeline/tiktok.ts` | TikTok Direct Post (optional; skipped without TikTok secrets). |
 | `data/history.json` | Past episodes, so the writer doesn't repeat themes. Committed back by the workflow. |
 | `data/sample-episode.json` | A hand-written episode for testing without API keys. |
@@ -82,7 +83,26 @@ In the GitHub repo, add under Settings → Secrets and variables → Actions:
 Run it once by hand from the Actions tab (**Daily Sunny episode → Run workflow**, mode `test`
 first, then `no-upload`). The MP4 is attached to each run as a download for 14 days.
 
-### 5. TikTok (optional, currently on hold)
+### 5. Facebook Reels
+Each episode is also posted as a Reel on your Facebook Page and scheduled for the same 3 PM slot
+(`publish-now` posts it straight away). Reels can only go to a **Page**, not a personal profile.
+
+1. At developers.facebook.com, create an app (use case: *Manage everything on your Page*).
+   Add yourself as admin. Fill in a privacy policy URL, then switch the app to **Live**.
+   In Development mode, Reels are visible only to people with a role on the app.
+2. Put `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` in `.env`.
+3. In Graph API Explorer, select the app, click *Get User Access Token*, tick
+   `pages_show_list`, `pages_read_engagement` and `pages_manage_posts`, and approve for Sunny's Page.
+4. Run `npm run auth:facebook` and paste that token. It prints `FACEBOOK_PAGE_ID` and a Page token
+   that never expires (it stops working only if you change your Facebook password or remove the app).
+5. Add repository secrets `FACEBOOK_PAGE_ID` and `FACEBOOK_PAGE_TOKEN`.
+6. Run the workflow in `facebook-test` mode. It saves the sample as a **draft** Reel on the Page
+   (Meta Business Suite → Content → Drafts), so you can check it without posting anything.
+
+Reels are labelled as AI-generated (`is_ai_generated`). Set the repository variable
+`FACEBOOK_ENABLED=false` to pause Facebook without removing the secrets.
+
+### 6. TikTok (optional, currently on hold)
 TikTok is switched off. To turn it on, finish the steps below and set the repository variable
 `TIKTOK_ENABLED=true`.
 

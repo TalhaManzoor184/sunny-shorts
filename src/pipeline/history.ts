@@ -8,6 +8,7 @@ export type HistoryEntry = {
   videoId?: string;
   publishAt?: string;
   tiktokPublishId?: string;
+  facebookVideoId?: string;
 };
 
 export async function loadHistory(): Promise<HistoryEntry[]> {

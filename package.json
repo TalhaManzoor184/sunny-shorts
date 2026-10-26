@@ -10,6 +10,7 @@
     "episode:sample": "tsx src/pipeline/run.ts --sample --tts=espeak --no-upload",
     "auth:youtube": "tsx src/scripts/get-refresh-token.ts",
     "auth:tiktok": "tsx src/scripts/tiktok-auth.ts",
+    "auth:facebook": "tsx src/scripts/facebook-auth.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

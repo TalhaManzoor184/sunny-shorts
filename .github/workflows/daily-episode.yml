@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "full = real episode, public at 3 PM · publish-now = real episode, public immediately · no-upload = real episode, no YouTube · test = sample script + robot voice, needs no keys · upload-test = sample + robot voice uploaded PRIVATE to YouTube and TikTok (Only me), checks keys without using Gemini"
+        description: "full = real episode, public at 3 PM · publish-now = real episode, public immediately · no-upload = real episode, no YouTube · test = sample script + robot voice, needs no keys · upload-test = sample + robot voice uploaded PRIVATE to YouTube and TikTok (Only me), checks keys without using Gemini · facebook-test = sample + robot voice saved as a Facebook DRAFT only"
         type: choice
-        options: [full, publish-now, no-upload, test, upload-test]
+        options: [full, publish-now, no-upload, test, upload-test, facebook-test]
         default: test
 
 permissions:
@@ -31,6 +31,8 @@ env:
   GEMINI_VOICE: ${{ vars.GEMINI_VOICE || 'Puck' }}
   VOICE_PITCH: ${{ vars.VOICE_PITCH || '1.0' }}
   MADE_FOR_KIDS: ${{ vars.MADE_FOR_KIDS || 'false' }}
+  # Facebook Reels run whenever FACEBOOK_PAGE_ID and FACEBOOK_PAGE_TOKEN secrets exist. Set FACEBOOK_ENABLED=false to pause.
+  FACEBOOK_ENABLED: ${{ vars.FACEBOOK_ENABLED || 'true' }}
   # TikTok is on hold. Set the repository variable TIKTOK_ENABLED=true to switch it on.
   TIKTOK_ENABLED: ${{ vars.TIKTOK_ENABLED || 'false' }}
   TIKTOK_PRIVACY: ${{ vars.TIKTOK_PRIVACY || 'PUBLIC_TO_EVERYONE' }}
@@ -71,6 +73,8 @@ jobs:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
+          FACEBOOK_PAGE_TOKEN: ${{ secrets.FACEBOOK_PAGE_TOKEN }}
           TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
           TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
           TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
@@ -80,7 +84,8 @@ jobs:
             test)      npm run episode -- --sample --tts=espeak --no-upload ;;
             no-upload) npm run episode -- --no-upload ;;
             publish-now) UPLOAD_MODE=public npm run episode ;;
-            upload-test) UPLOAD_MODE=private TIKTOK_PRIVACY=SELF_ONLY npm run episode -- --sample --tts=espeak ;;
+            upload-test) UPLOAD_MODE=private TIKTOK_PRIVACY=SELF_ONLY FACEBOOK_DRAFT=true npm run episode -- --sample --tts=espeak ;;
+            facebook-test) FACEBOOK_DRAFT=true npm run episode -- --sample --tts=espeak --facebook-only ;;
             *)         npm run episode ;;
           esac
 
