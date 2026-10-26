@@ -2,10 +2,12 @@ name: Daily Sunny episode
 
 on:
   schedule:
-    # 08:13 UTC = 1:13 PM Pakistan time. Render takes ~5 min; the Short is uploaded private
-    # and YouTube makes it public at PUBLISH_TIME (3:00 PM PKT). GitHub can start cron jobs
-    # late at busy times, so the 2-hour gap keeps 3 PM safe.
-    - cron: "13 8 * * *"
+    # GitHub starts cron jobs late (sometimes hours) or skips them, so try three times before
+    # the 3:00 PM PKT slot: 11:13 AM, 12:43 PM and 2:07 PM PKT. Each run checks data/history.json
+    # and does nothing if today's slot already has an episode, so only one video goes out.
+    - cron: "13 6 * * *"
+    - cron: "43 7 * * *"
+    - cron: "7 9 * * *"
   workflow_dispatch:
     inputs:
       mode:
@@ -78,7 +80,7 @@ jobs:
           TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
           TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
           TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
-          MODE: ${{ github.event_name == 'schedule' && 'full' || inputs.mode }}
+          MODE: ${{ github.event_name == 'schedule' && 'scheduled' || inputs.mode }}
         run: |
           case "$MODE" in
             test)      npm run episode -- --sample --tts=espeak --no-upload ;;
@@ -86,7 +88,8 @@ jobs:
             publish-now) UPLOAD_MODE=public npm run episode ;;
             upload-test) UPLOAD_MODE=private TIKTOK_PRIVACY=SELF_ONLY FACEBOOK_DRAFT=true npm run episode -- --sample --tts=espeak ;;
             facebook-test) FACEBOOK_DRAFT=true npm run episode -- --sample --tts=espeak --facebook-only ;;
-            *)         npm run episode ;;
+            full)      npm run episode ;;
+            *)         npm run episode -- --if-slot-free ;;
           esac
 
       - name: Keep the video for 14 days

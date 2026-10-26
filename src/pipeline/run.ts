@@ -10,7 +10,7 @@ import { writeScript } from "./script";
 import { voiceEpisode } from "./tts";
 import { facebookConfigured, uploadFacebookReel } from "./facebook";
 import { tiktokConfigured, uploadTikTok } from "./tiktok";
-import { uploadShort } from "./upload";
+import { publishAtIso, uploadShort } from "./upload";
 
 /**
  * One full episode: script → voice → lip sync → render → upload.
@@ -19,6 +19,7 @@ import { uploadShort } from "./upload";
  *   npm run episode -- --no-upload        everything except uploading (YouTube and TikTok)
  *   npm run episode -- --no-tiktok        skip TikTok
  *   npm run episode -- --no-facebook      skip Facebook
+ *   npm run episode -- --if-slot-free     do nothing if the next publish slot already has an episode
  *   npm run episode -- --sample           skip Claude, use data/sample-episode.json
  *   npm run episode -- --tts=espeak       offline robot voice (testing only)
  *   npm run episode -- --script=path.json use a hand-written script
@@ -55,6 +56,19 @@ async function main() {
   const t0 = Date.now();
   const date = new Date().toISOString().slice(0, 10);
   const history = await loadHistory();
+
+  // Scheduled runs fire several times a day because GitHub often starts cron jobs late or not at all.
+  // Only the first one that finds the next publish slot empty makes an episode.
+  if (args.has("if-slot-free")) {
+    const slot = publishAtIso();
+    const taken = history.find((h) => h.publishAt === slot);
+    if (taken) {
+      console.log(`Slot ${slot} already has "${taken.title}". Nothing to do.`);
+      if (process.env.GITHUB_ACTIONS) console.log(`::notice title=Already scheduled::${slot} has ${taken.title.replace(/[:,\r\n%]/g, " ")}`);
+      return;
+    }
+    console.log(`Slot ${slot} is free; making an episode for it.`);
+  }
 
   // 1. Script
   let script: EpisodeScript;
