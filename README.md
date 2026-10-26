@@ -23,6 +23,7 @@ episode. Only his pose, expression and mouth change.
 | `src/pipeline/tts.ts` | Voice: Gemini TTS (default) or ElevenLabs, plus an offline `espeak` voice for testing. |
 | `src/pipeline/lipsync.ts` | Runs Rhubarb Lip Sync on each line. |
 | `src/pipeline/upload.ts` | YouTube upload with the audience setting, scheduled publish. |
+| `src/pipeline/tiktok.ts` | TikTok Direct Post (optional; skipped without TikTok secrets). |
 | `data/history.json` | Past episodes, so the writer doesn't repeat themes. Committed back by the workflow. |
 | `data/sample-episode.json` | A hand-written episode for testing without API keys. |
 | `assets/music/` | Optional. Drop royalty-free music files here; one is picked at random, mixed quietly. |
@@ -80,6 +81,32 @@ In the GitHub repo, add under Settings → Secrets and variables → Actions:
 
 Run it once by hand from the Actions tab (**Daily Sunny episode → Run workflow**, mode `test`
 first, then `no-upload`). The MP4 is attached to each run as a download for 14 days.
+
+### 5. TikTok (optional)
+The same video is posted to TikTok right after the YouTube upload. TikTok has no scheduling in
+its API, so it goes live as soon as it is posted (around 1:20 PM), not at 3 PM.
+
+1. At developers.tiktok.com, create an app. Add the products **Login Kit** and
+   **Content Posting API** (turn on **Direct Post**). Request the scopes `user.info.basic` and
+   `video.publish`.
+2. Register a redirect URI: any https page on a site you own (verify the domain in the app's
+   URL properties). Add a privacy policy and terms URL; TikTok asks for both.
+3. Put `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` and `TIKTOK_REDIRECT_URI` in `.env`, run
+   `npm run auth:tiktok` on your computer, approve with Sunny's TikTok account, and paste the
+   address you land on. It prints `TIKTOK_REFRESH_TOKEN`.
+4. Add repository secrets `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET`, `TIKTOK_REFRESH_TOKEN`.
+5. Add `GH_PAT`: a fine-grained personal access token for this repo only, with
+   **Secrets: Read and write**. TikTok sometimes replaces the refresh token; the workflow uses
+   `GH_PAT` to save the new one so the next day's run still works.
+
+**Until TikTok audits the app**, posts are forced to *Only me* and the TikTok account must be
+set to private. The pipeline detects this and posts as *Only me* automatically. Apply for the
+audit in the developer portal (TikTok reviews how the app follows its Content Sharing
+Guidelines). After approval, posts follow `TIKTOK_PRIVACY` (default `PUBLIC_TO_EVERYONE`).
+Videos are labelled as AI-generated content (`is_aigc`).
+
+If TikTok fails, the YouTube upload still counts and the run is marked failed so you get an
+email. `--no-tiktok` skips TikTok for a run.
 
 ## Daily schedule
 

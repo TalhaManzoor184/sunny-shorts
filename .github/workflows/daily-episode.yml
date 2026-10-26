@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "full = real episode, public at 3 PM · publish-now = real episode, public immediately · no-upload = real episode, no YouTube · test = sample script + robot voice, needs no keys · upload-test = sample + robot voice uploaded PRIVATE, checks YouTube keys without using Gemini"
+        description: "full = real episode, public at 3 PM · publish-now = real episode, public immediately · no-upload = real episode, no YouTube · test = sample script + robot voice, needs no keys · upload-test = sample + robot voice uploaded PRIVATE to YouTube and TikTok (Only me), checks keys without using Gemini"
         type: choice
         options: [full, publish-now, no-upload, test, upload-test]
         default: test
@@ -31,6 +31,7 @@ env:
   GEMINI_VOICE: ${{ vars.GEMINI_VOICE || 'Puck' }}
   VOICE_PITCH: ${{ vars.VOICE_PITCH || '1.0' }}
   MADE_FOR_KIDS: ${{ vars.MADE_FOR_KIDS || 'false' }}
+  TIKTOK_PRIVACY: ${{ vars.TIKTOK_PRIVACY || 'PUBLIC_TO_EVERYONE' }}
   SCRIPT_PROVIDER: ${{ vars.SCRIPT_PROVIDER || 'gemini' }}
   GEMINI_TEXT_MODEL: ${{ vars.GEMINI_TEXT_MODEL }}
   ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
@@ -68,13 +69,16 @@ jobs:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
           MODE: ${{ github.event_name == 'schedule' && 'full' || inputs.mode }}
         run: |
           case "$MODE" in
             test)      npm run episode -- --sample --tts=espeak --no-upload ;;
             no-upload) npm run episode -- --no-upload ;;
             publish-now) UPLOAD_MODE=public npm run episode ;;
-            upload-test) UPLOAD_MODE=private npm run episode -- --sample --tts=espeak ;;
+            upload-test) UPLOAD_MODE=private TIKTOK_PRIVACY=SELF_ONLY npm run episode -- --sample --tts=espeak ;;
             *)         npm run episode ;;
           esac
 
@@ -89,7 +93,23 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+      - name: Save new TikTok refresh token
+        # TikTok can rotate the refresh token. GH_PAT (a fine-grained token with
+        # "Secrets: read and write" on this repo) lets the run store the new one.
+        if: always() && hashFiles('out/tiktok-refresh-token.txt') != ''
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error title=TikTok token not saved::TikTok issued a new refresh token but GH_PAT is not set. Add GH_PAT or the next run may fail."
+            exit 1
+          fi
+          gh secret set TIKTOK_REFRESH_TOKEN --repo "$GITHUB_REPOSITORY" < out/tiktok-refresh-token.txt
+          rm -f out/tiktok-refresh-token.txt
+          echo "TikTok refresh token updated."
+
       - name: Save episode history
+        if: always()
         run: |
           git config user.name "sunny-bot"
           git config user.email "sunny-bot@users.noreply.github.com"

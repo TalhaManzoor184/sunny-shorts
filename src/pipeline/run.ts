@@ -8,13 +8,15 @@ import { mouthCues } from "./lipsync";
 import { renderEpisode } from "./render";
 import { writeScript } from "./script";
 import { voiceEpisode } from "./tts";
+import { tiktokConfigured, uploadTikTok } from "./tiktok";
 import { uploadShort } from "./upload";
 
 /**
  * One full episode: script → voice → lip sync → render → upload.
  *
  *   npm run episode                       full daily run
- *   npm run episode -- --no-upload        everything except YouTube
+ *   npm run episode -- --no-upload        everything except uploading (YouTube and TikTok)
+ *   npm run episode -- --no-tiktok        upload to YouTube only
  *   npm run episode -- --sample           skip Claude, use data/sample-episode.json
  *   npm run episode -- --tts=espeak       offline robot voice (testing only)
  *   npm run episode -- --script=path.json use a hand-written script
@@ -113,7 +115,24 @@ async function main() {
   } else {
     const { videoId, publishAt } = await uploadShort(mp4, script);
     console.log(`Upload: https://youtube.com/shorts/${videoId}${publishAt ? ` (goes public ${publishAt})` : ""}`);
-    await appendHistory({ date, title: script.title, theme: script.theme, videoId, publishAt });
+
+    // TikTok is optional and must never cost us the YouTube upload or the history entry.
+    let tiktokPublishId: string | undefined;
+    if (args.has("no-tiktok") || !tiktokConfigured()) {
+      console.log(`TikTok: skipped (${args.has("no-tiktok") ? "--no-tiktok" : "no TikTok secrets"})`);
+    } else {
+      try {
+        const tt = await uploadTikTok(mp4, script, seconds);
+        tiktokPublishId = tt.publishId;
+        console.log(`TikTok: posted (${tt.privacy})`);
+      } catch (err) {
+        console.error(err);
+        const msg = String((err as Error)?.message ?? err).replace(/[\r\n%]/g, " ");
+        if (process.env.GITHUB_ACTIONS) console.log(`::error title=TikTok upload failed::${msg}`);
+        process.exitCode = 1; // YouTube still went out; fail the run so the TikTok problem gets noticed
+      }
+    }
+    await appendHistory({ date, title: script.title, theme: script.theme, videoId, publishAt, tiktokPublishId });
   }
 
   console.log(`Done in ${((Date.now() - t0) / 1000).toFixed(0)}s`);

@@ -59,6 +59,9 @@ export const config = {
   /** YouTube audience setting. Must match the content in character/bible.md:
    *  "false" = general audience (current bible), "true" = content made for children. */
   madeForKids: opt("MADE_FOR_KIDS", "false") === "true",
+  /** TikTok visibility: PUBLIC_TO_EVERYONE, FOLLOWER_OF_CREATOR, MUTUAL_FOLLOW_FRIENDS or SELF_ONLY.
+   *  Until TikTok audits your app, only SELF_ONLY is allowed and the pipeline falls back to it. */
+  tiktokPrivacy: opt("TIKTOK_PRIVACY", "PUBLIC_TO_EVERYONE"),
 
   paths: {
     bible: path.join(ROOT, "character/bible.md"),
