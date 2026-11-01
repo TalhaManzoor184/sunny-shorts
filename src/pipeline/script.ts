@@ -9,16 +9,20 @@ import { shouldFallBack, withRetry } from "./retry";
 /** JSON Schema for one episode. Shared by both script writers. */
 const EPISODE_SCHEMA = {
   type: "object",
-  required: ["title", "description", "tags", "theme", "scene", "beats"],
+  required: ["title", "description", "tags", "theme", "hook", "scene", "beats"],
   properties: {
     title: { type: "string", description: "YouTube title, max 70 characters, relatable and funny, no clickbait, ends with a relevant emoji. Not aimed at children." },
     description: { type: "string", description: "2–3 short, funny sentences describing the joke without spoiling the punchline. No links." },
     tags: { type: "array", items: { type: "string" }, description: "6–12 search tags." },
     theme: { type: "string", description: "The one idea of the episode, e.g. 'counting to 5 with claps'." },
+    hook: {
+      type: "string",
+      description: "On-screen text shown from the very first frame, max 40 characters, e.g. 'POV: your phone hits 1%' or 'Me trying to wake up on Monday'. Relatable, makes people stop scrolling.",
+    },
     scene: { type: "string", enum: ["park", "bedroom", "rainbow"] },
     beats: {
       type: "array",
-      description: "5–9 spoken lines in order. Last line must be exactly 'Shine, shine, Sunny!'",
+      description: "3–6 spoken lines in order. Exactly one line is the punchline (usually the last).",
       items: {
         type: "object",
         required: ["line", "expression", "action"],
@@ -27,6 +31,7 @@ const EPISODE_SCHEMA = {
           expression: { type: "string", enum: ["happy", "wink", "surprised", "laughing"] },
           action: { type: "string", enum: ["idle", "dance", "wave", "jump", "spin"] },
           scene: { type: "string", enum: ["park", "bedroom", "rainbow"], description: "Optional set change for this line." },
+          punchline: { type: "boolean", description: "true on the one line where the joke lands." },
         },
       },
     },
@@ -48,10 +53,12 @@ ${recent}
 
 Write today's episode. Requirements:
 - Pick a theme that is NOT in the recent episodes list (vary the theme family too, not just the wording).
-- Total spoken words 55–100, so the Short lands between 20 and 45 seconds.
-- First line is the hook. Build to a clear punchline or twist near the end.
-- Match each line's expression and action to what Sunny is saying.
-- The last line is exactly "Shine, shine, Sunny!" with action "jump" and expression "laughing".
+- SHORT: 3–6 lines, 25–50 spoken words in total, so the Short is 12–20 seconds. Cut every word that is not setup or joke.
+- The first spoken line must grab attention in under two seconds: start in the middle of the situation, no greetings, no "hi", no introductions.
+- The hook text and the first line work together but do not repeat each other word for word.
+- Mark exactly one line with punchline: true. End on the joke (the punchline is usually the last line), so the Short loops straight back to the start.
+- Do not end with a catchphrase or sign-off.
+- Match each line's expression and action to what Sunny is saying; use a scene change only when it helps the joke.
 - Do not ask viewers to like, comment or subscribe.`;
 }
 

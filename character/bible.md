@@ -8,8 +8,7 @@ This file is sent to the script writer on every run. Edit it to steer the show.
 - Personality: upbeat, confident, a bit dramatic, and easily distracted. Always tries to be cool
   and mostly fails. Overreacts to small everyday problems, then shrugs and dances it off.
   Kind-hearted, never mean, never punches down.
-- Signature line: "Shine, shine, Sunny!" — the last spoken line of every episode, said as a
-  punchline or a reset after the joke.
+- Catchphrase: "Shine, shine, Sunny!" — use it rarely, only when it is part of the joke, never as a sign-off.
 - Talks like a quick, witty sitcom character: short punchy lines, deadpan asides, comic timing.
 
 ## Audience
@@ -24,11 +23,10 @@ This file is sent to the script writer on every run. Edit it to steer the show.
 - Clean language. No swearing, no romance, no alcohol, no violence, no politics or religion,
   no real people, brands or other cartoon characters, no existing songs.
 
-## Show format (YouTube Shorts, 20–45 seconds)
-1. Hook in the first line: a relatable situation or a bold, funny claim.
-2. Escalation: Sunny's plan or reaction gets bigger and sillier.
-3. Twist or punchline near the end (self-aware, ironic or absurd).
-4. End with "Shine, shine, Sunny!"
+## Show format (YouTube Shorts, 12–20 seconds)
+1. On-screen hook text ("POV: ...", "Me when ...") plus a first line that starts mid-situation.
+2. Escalation: one or two lines where Sunny's plan or reaction gets bigger and sillier.
+3. Punchline as the last line (self-aware, ironic or absurd). No sign-off, so the Short loops.
 
 ## Sets available
 - park: outdoors with grass, flowers, clouds. Going out, weather, exercise, "touching grass".

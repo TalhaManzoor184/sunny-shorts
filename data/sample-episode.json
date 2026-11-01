@@ -1,15 +1,13 @@
 {
   "title": "When Your Phone Hits 1% 🔋",
-  "description": "Sunny's phone is dying and he handles it with total calm. Totally. Calm.",
+  "description": "Sunny handles a dying phone with total calm. Totally. Calm.",
   "tags": ["relatable", "phone battery", "1 percent battery", "funny shorts", "cartoon comedy", "animation", "Sunny the star", "everyday life", "comedy shorts"],
   "theme": "phone battery at 1%",
+  "hook": "POV: your phone hits 1%",
   "scene": "bedroom",
   "beats": [
-    { "line": "One percent battery. Okay. Stay calm. Stay calm!", "expression": "surprised", "action": "idle" },
-    { "line": "Where is the charger? It was right here!", "expression": "surprised", "action": "spin" },
-    { "line": "Brightness down. Apps closed. Airplane mode. I am a genius.", "expression": "wink", "action": "dance" },
-    { "line": "Found it! Plugged in! Victory dance!", "expression": "laughing", "action": "jump", "scene": "rainbow" },
-    { "line": "Wait. The plug was never in the wall.", "expression": "surprised", "action": "idle", "scene": "rainbow" },
-    { "line": "Shine, shine, Sunny!", "expression": "laughing", "action": "jump", "scene": "rainbow" }
+    { "line": "One percent. Okay. Nobody panic. Where is the charger?!", "expression": "surprised", "action": "spin" },
+    { "line": "Found it! Plugged in! I am a genius!", "expression": "laughing", "action": "dance", "scene": "rainbow" },
+    { "line": "Wait. The plug was never in the wall.", "expression": "surprised", "action": "idle", "scene": "rainbow", "punchline": true }
   ]
 }

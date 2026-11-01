@@ -52,6 +52,19 @@ async function pickMusic(publicDir: string): Promise<string | undefined> {
   }
 }
 
+/** Copy the sound effects into the render's public folder. */
+async function copySfx(publicDir: string): Promise<string | undefined> {
+  try {
+    const files = (await fs.readdir(config.paths.sfx)).filter((f) => f.endsWith(".wav"));
+    if (!files.length) return undefined;
+    await fs.mkdir(path.join(publicDir, "sfx"), { recursive: true });
+    await Promise.all(files.map((f) => fs.copyFile(path.join(config.paths.sfx, f), path.join(publicDir, "sfx", f))));
+    return "sfx";
+  } catch {
+    return undefined;
+  }
+}
+
 async function main() {
   const t0 = Date.now();
   const date = new Date().toISOString().slice(0, 10);
@@ -110,16 +123,18 @@ async function main() {
   // 4. Render
   const props: EpisodeProps = {
     title: script.title,
+    hook: script.hook,
     scene: script.scene,
     beats,
     musicFile: await pickMusic(publicDir),
+    sfxDir: await copySfx(publicDir),
     fps: FPS,
-    gapSeconds: 0.35,
-    outroSeconds: 1.8,
+    gapSeconds: 0.2,
+    outroSeconds: 0.5,
   };
   await fs.writeFile(path.join(runDir, "props.json"), JSON.stringify(props, null, 2));
   const seconds = computeTimeline(props).totalSeconds;
-  if (seconds > 59) console.warn(`  Warning: ${seconds.toFixed(1)}s is long for a Short.`);
+  if (seconds > 25) console.warn(`  Warning: ${seconds.toFixed(1)}s; aim for 12–20 s so more viewers watch to the end.`);
   console.log(`Render: ${seconds.toFixed(1)}s video${props.musicFile ? " with music" : ""}`);
   const mp4 = path.join(runDir, "episode.mp4");
   await renderEpisode(props, publicDir, mp4);

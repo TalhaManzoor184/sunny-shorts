@@ -18,6 +18,8 @@ export const Beat = z.object({
   expression: Expression,
   action: Action,
   scene: Scene.optional(),
+  /** The joke lands on this line: the camera punches in, with an impact sound. */
+  punchline: z.boolean().optional(),
 });
 export type Beat = z.infer<typeof Beat>;
 
@@ -27,8 +29,10 @@ export const EpisodeScript = z.object({
   description: z.string().min(20).max(900),
   tags: z.array(z.string()).min(3).max(15),
   theme: z.string().min(2).max(60),
+  /** Big on-screen text shown from the first frame, e.g. "POV: your phone hits 1%". */
+  hook: z.string().min(3).max(60),
   scene: Scene,
-  beats: z.array(Beat).min(4).max(12),
+  beats: z.array(Beat).min(3).max(8),
 });
 export type EpisodeScript = z.infer<typeof EpisodeScript>;
 
@@ -52,10 +56,13 @@ export type EpisodeProps = {
   title: string;
   scene: Scene;
   beats: RenderedBeat[];
+  hook?: string;
   musicFile?: string; // relative to public dir
+  /** Folder (relative to public dir) holding pop.wav, whoosh.wav, boom.wav, boing.wav. Empty = no SFX. */
+  sfxDir?: string;
   fps: number;
   gapSeconds: number; // pause between beats
-  outroSeconds: number; // "Shine, Shine, Sunny!" end card
+  outroSeconds: number; // short hold after the last line so the Short loops cleanly
 };
 
 export const FPS = 30;

@@ -70,6 +70,7 @@ export const config = {
     history: path.join(ROOT, "data/history.json"),
     sample: path.join(ROOT, "data/sample-episode.json"),
     music: path.join(ROOT, "assets/music"),
+    sfx: path.join(ROOT, "assets/sfx"),
     out: path.join(ROOT, "out"),
     entry: path.join(ROOT, "src/remotion/index.ts"),
   },

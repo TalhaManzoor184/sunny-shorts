@@ -10,8 +10,9 @@ const PREVIEW: EpisodeProps = {
   title: "Preview",
   scene: "park",
   fps: FPS,
-  gapSeconds: 0.35,
-  outroSeconds: 1.8,
+  hook: "POV: it's your first Short",
+  gapSeconds: 0.2,
+  outroSeconds: 0.5,
   beats: [
     {
       line: "Hi friends! It's me, Sunny!",
