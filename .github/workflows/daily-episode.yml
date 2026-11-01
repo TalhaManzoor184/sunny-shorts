@@ -103,6 +103,23 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+      - name: Archive the episode for compilations
+        # Artifacts expire after 14 days; the "episode-archive" release keeps every uploaded
+        # episode as <date>_<videoId>.mp4 for compilation.yml. Never fails the daily run.
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          npx tsx src/scripts/archive-collect.ts --out=archive out
+          shopt -s nullglob
+          files=(archive/*.mp4)
+          [ ${#files[@]} -eq 0 ] && exit 0
+          gh release view episode-archive >/dev/null 2>&1 || gh release create episode-archive \
+            --title "Episode archive" --latest=false \
+            --notes "Every uploaded Sunny short, kept for compilations. Named <date>_<videoId>.mp4."
+          gh release upload episode-archive "${files[@]}" --clobber
+
       - name: Save new TikTok refresh token
         # TikTok can rotate the refresh token. GH_PAT (a fine-grained token with
         # "Secrets: read and write" on this repo) lets the run store the new one.

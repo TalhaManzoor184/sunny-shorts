@@ -1,0 +1,102 @@
+name: Long-form compilation
+
+# Joins archived Shorts into a 16:9 "Sunny's Funniest Moments" video. Long videos earn
+# watch hours (Shorts views don't). Checks every Sunday; builds only when there are
+# MIN_MINUTES of episodes that weren't in an earlier volume.
+
+on:
+  schedule:
+    - cron: "23 5 * * 0" # Sunday 10:23 AM Pakistan time
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "no-upload = build only (download it from the run) · private = upload private, you publish · schedule = public at PUBLISH_TIME · public = public now"
+        type: choice
+        options: [no-upload, private, schedule, public]
+        default: no-upload
+      force:
+        description: "Build even if there are fewer than MIN_MINUTES of new episodes (for a test)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write # download the archive release, commit data/compilations.json
+
+concurrency:
+  group: compilation
+  cancel-in-progress: false
+
+env:
+  MIN_MINUTES: ${{ vars.COMPILATION_MIN_MINUTES || '8' }}
+  MAX_MINUTES: ${{ vars.COMPILATION_MAX_MINUTES || '12' }}
+  PUBLISH_TIME: ${{ vars.PUBLISH_TIME || '15:00' }}
+  PUBLISH_UTC_OFFSET: ${{ vars.PUBLISH_UTC_OFFSET || '5' }}
+  PUBLISH_DELAY_DAYS: ${{ vars.PUBLISH_DELAY_DAYS || '0' }}
+  MADE_FOR_KIDS: ${{ vars.MADE_FOR_KIDS || 'false' }}
+
+jobs:
+  compile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install ffmpeg and fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-dejavu-core
+
+      - run: npm ci
+
+      - name: Download the episode archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p archive
+          gh release download episode-archive -D archive -p '*.mp4' --clobber || echo "No archive release yet."
+          ls archive | wc -l
+
+      - name: Build (and upload) the compilation
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          MODE: ${{ github.event_name == 'schedule' && (vars.COMPILATION_UPLOAD_MODE || 'private') || inputs.mode }}
+          FORCE: ${{ github.event_name != 'schedule' && inputs.force }}
+        run: |
+          flags="--dir=archive --min-minutes=$MIN_MINUTES --max-minutes=$MAX_MINUTES"
+          [ "$FORCE" = "true" ] || flags="$flags --if-enough"
+          if [ "$MODE" = "no-upload" ]; then
+            npm run compile -- $flags --no-upload
+          else
+            COMPILATION_UPLOAD_MODE=$MODE npm run compile -- $flags
+          fi
+
+      - name: Keep the video for 14 days
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: compilation-${{ github.run_number }}
+          path: |
+            out/compilation-vol-*/compilation.mp4
+            out/compilation-vol-*/thumbnail.jpg
+            out/compilation-vol-*/meta.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Save which episodes were used
+        if: always()
+        run: |
+          git config user.name "sunny-bot"
+          git config user.email "sunny-bot@users.noreply.github.com"
+          git add data/compilations.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Compilation $(date -u +%F)"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push
+          fi

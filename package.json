@@ -8,6 +8,8 @@
     "studio": "remotion studio src/remotion/index.ts",
     "episode": "tsx src/pipeline/run.ts",
     "episode:sample": "tsx src/pipeline/run.ts --sample --tts=espeak --no-upload",
+    "compile": "tsx src/pipeline/compile.ts",
+    "archive": "tsx src/scripts/archive-collect.ts",
     "auth:youtube": "tsx src/scripts/get-refresh-token.ts",
     "auth:tiktok": "tsx src/scripts/tiktok-auth.ts",
     "auth:facebook": "tsx src/scripts/facebook-auth.ts",
