@@ -220,7 +220,9 @@ export async function voiceEpisode(input: Line[], outWavs: string[]): Promise<Vo
         await geminiWith(lines.join("\n"), raw, { duo: input });
       } catch (err) {
         ok = false;
-        console.warn(`  Two-voice request failed (${String((err as Error)?.message ?? err).slice(0, 200)}); voicing line by line instead.`);
+        const why = String((err as Error)?.message ?? err).slice(0, 200).replace(/[\r\n%]/g, " ");
+        console.warn(`  Two-voice request failed (${why}); voicing line by line instead.`);
+        if (process.env.GITHUB_ACTIONS) console.log(`::warning title=Two-voice TTS fell back to per-line::${why}`);
       }
     } else {
       await gemini(lines.join("\n<short pause>\n"), raw, input[0].speaker);
