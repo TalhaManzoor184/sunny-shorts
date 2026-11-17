@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import type { WordTiming } from "../shared/episode";
+import type { Speaker, WordTiming } from "../shared/episode";
 import { durationOf, ffmpeg, toEpisodeWav } from "./audio";
 import { config, req } from "./config";
 import { shouldFallBack, withRetry } from "./retry";
@@ -44,8 +44,8 @@ function wordsFromAlignment(a: { characters: string[]; character_start_times_sec
   return words;
 }
 
-async function elevenlabs(text: string, rawPath: string): Promise<WordTiming[] | null> {
-  const voice = req("ELEVENLABS_VOICE_ID");
+async function elevenlabs(text: string, rawPath: string, speaker: Speaker = "sunny"): Promise<WordTiming[] | null> {
+  const voice = speaker === "moon" && config.elevenMoonVoiceId ? config.elevenMoonVoiceId : req("ELEVENLABS_VOICE_ID");
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}/with-timestamps?output_format=mp3_44100_128`, {
     method: "POST",
     headers: { "xi-api-key": req("ELEVENLABS_API_KEY"), "Content-Type": "application/json" },
@@ -68,17 +68,39 @@ async function elevenlabs(text: string, rawPath: string): Promise<WordTiming[] |
  * Google Gemini TTS (Interactions API). Returns 24 kHz mono WAV.
  * Gemini gives no word timings, so captions use the estimate; Rhubarb still drives the mouth exactly.
  */
-async function gemini(text: string, rawPath: string): Promise<null> {
+/** Gemini voice name and speaking style for each character. */
+function voiceOf(speaker: Speaker): { voice: string; style: string; name: string } {
+  return speaker === "moon"
+    ? { voice: config.geminiMoonVoice, style: config.geminiMoonStyle, name: "Moon" }
+    : { voice: config.geminiVoice, style: config.geminiStyle, name: "Sunny" };
+}
+
+type GeminiVoices = { single: Speaker } | { duo: true };
+
+async function gemini(text: string, rawPath: string, speaker: Speaker = "sunny"): Promise<null> {
+  return geminiWith(text, rawPath, { single: speaker });
+}
+
+async function geminiWith(text: string, rawPath: string, voices: GeminiVoices): Promise<null> {
   try {
-    return await withRetry(`voice (${config.geminiModel})`, () => geminiOnce(config.geminiModel, text, rawPath));
+    return await withRetry(`voice (${config.geminiModel})`, () => geminiOnce(config.geminiModel, text, rawPath, voices));
   } catch (err) {
     if (!shouldFallBack(err) || !config.geminiTtsFallback) throw err;
     console.warn(`  ${config.geminiModel} is busy or out of quota; using ${config.geminiTtsFallback}`);
-    return await withRetry(`voice (${config.geminiTtsFallback})`, () => geminiOnce(config.geminiTtsFallback, text, rawPath));
+    return await withRetry(`voice (${config.geminiTtsFallback})`, () => geminiOnce(config.geminiTtsFallback, text, rawPath, voices));
   }
 }
 
-async function geminiOnce(model: string, text: string, rawPath: string): Promise<null> {
+async function geminiOnce(model: string, text: string, rawPath: string, voices: GeminiVoices): Promise<null> {
+  const duo = "duo" in voices;
+  const one = duo ? voiceOf("sunny") : voiceOf(voices.single);
+  const style = duo
+    ? `A two-character cartoon comedy. ${voiceOf("sunny").name}: ${voiceOf("sunny").style}. ${voiceOf("moon").name}: ${voiceOf("moon").style}. Leave a short pause between turns.`
+    : one.style;
+  // Multi-speaker: name both speakers; the text uses "Sunny: …" / "Moon: …" turns.
+  const speechConfig = duo
+    ? (["sunny", "moon"] as const).map((s) => ({ speaker: voiceOf(s).name, voice: voiceOf(s).voice, language: "en-US" }))
+    : [{ voice: one.voice, language: "en-US" }];
   const ai = new GoogleGenAI({ apiKey: req("GEMINI_API_KEY") });
   const interaction = await ai.interactions.create({
     model,
@@ -89,13 +111,13 @@ async function geminiOnce(model: string, text: string, rawPath: string): Promise
           {
             type: "text",
             text,
-            annotations: config.geminiStyle ? [{ type: "speech_metadata", style: config.geminiStyle }] : undefined,
+            annotations: style ? [{ type: "speech_metadata", style }] : undefined,
           },
         ],
       },
     ],
     response_format: { type: "audio", mime_type: "audio/wav" },
-    generation_config: { speech_config: [{ voice: config.geminiVoice, language: "en-US" }] },
+    generation_config: { speech_config: speechConfig },
   });
   const data = interaction.output_audio?.data;
   if (!data) throw new Error(`Gemini returned no audio for: "${text}"`);
@@ -104,10 +126,13 @@ async function geminiOnce(model: string, text: string, rawPath: string): Promise
 }
 
 /** Offline robot voice for testing the pipeline without API keys. */
-async function espeak(text: string, rawPath: string): Promise<null> {
-  await run("espeak-ng", ["-v", "en-us+f3", "-p", "75", "-s", "150", "-w", rawPath, text]);
+async function espeak(text: string, rawPath: string, speaker: Speaker = "sunny"): Promise<null> {
+  const args = speaker === "moon" ? ["-v", "en-us+m3", "-p", "25", "-s", "125"] : ["-v", "en-us+f3", "-p", "75", "-s", "150"];
+  await run("espeak-ng", [...args, "-w", rawPath, text]);
   return null;
 }
+
+const pitchFor = (speaker: Speaker) => (speaker === "moon" ? config.moonPitch : config.voicePitch);
 
 type Silence = { start: number; end: number };
 
@@ -181,10 +206,20 @@ export function chooseCuts(silences: Silence[], lines: string[], total: number):
  * few TTS requests a day) and the audio is cut at the pauses between lines. Other providers, or a
  * failed split, fall back to one request per line.
  */
-export async function voiceEpisode(lines: string[], outWavs: string[]): Promise<Voiced[]> {
+export type Line = { text: string; speaker: Speaker };
+
+export async function voiceEpisode(input: Line[], outWavs: string[]): Promise<Voiced[]> {
+  const lines = input.map((l) => l.text);
+  const duo = input.some((l) => l.speaker === "moon") && input.some((l) => l.speaker === "sunny");
   if (config.ttsProvider === "gemini" && lines.length > 1) {
     const raw = path.join(path.dirname(outWavs[0]), "episode.raw.wav");
-    await gemini(lines.join("\n<short pause>\n"), raw);
+    if (duo) {
+      // One multi-speaker request: "Sunny: …" / "Moon: …" turns.
+      const transcript = input.map((l) => `${voiceOf(l.speaker).name}: ${l.text} <short pause>`).join("\n");
+      await geminiWith(transcript, raw, { duo: true });
+    } else {
+      await gemini(lines.join("\n<short pause>\n"), raw, input[0].speaker);
+    }
     const total = await durationOf(raw);
     const cuts = chooseCuts(await findSilences(raw), lines, total);
     if (cuts) {
@@ -193,7 +228,7 @@ export async function voiceEpisode(lines: string[], outWavs: string[]): Promise<
       for (const [i, out] of outWavs.entries()) {
         const seg = out.replace(/\.wav$/, ".seg.wav");
         await ffmpeg(["-i", raw, "-ss", bounds[i].toFixed(3), "-to", bounds[i + 1].toFixed(3), seg]);
-        await toEpisodeWav(seg, out, config.voicePitch);
+        await toEpisodeWav(seg, out, pitchFor(input[i].speaker));
         await fs.rm(seg, { force: true });
         const duration = await durationOf(out);
         voiced.push({ wavPath: out, duration, words: estimateWords(lines[i], duration) });
@@ -205,18 +240,18 @@ export async function voiceEpisode(lines: string[], outWavs: string[]): Promise<
     await fs.rm(raw, { force: true });
   }
   const voiced: Voiced[] = [];
-  for (const [i, line] of lines.entries()) voiced.push(await voiceLine(line, outWavs[i]));
+  for (const [i, line] of input.entries()) voiced.push(await voiceLine(line.text, outWavs[i], line.speaker));
   return voiced;
 }
 
-export async function voiceLine(text: string, outWav: string): Promise<Voiced> {
+export async function voiceLine(text: string, outWav: string, speaker: Speaker = "sunny"): Promise<Voiced> {
   const raw = outWav.replace(/\.wav$/, config.ttsProvider === "elevenlabs" ? ".raw.mp3" : ".raw.wav");
   const provider = { gemini, elevenlabs, espeak }[config.ttsProvider];
   if (!provider) throw new Error(`Unknown TTS_PROVIDER "${config.ttsProvider}". Use gemini, elevenlabs or espeak.`);
-  const timings = await provider(text, raw);
+  const timings = await provider(text, raw, speaker);
 
   const rawDuration = await durationOf(raw);
-  await toEpisodeWav(raw, outWav, config.voicePitch);
+  await toEpisodeWav(raw, outWav, pitchFor(speaker));
   await fs.rm(raw, { force: true });
   const duration = await durationOf(outWav);
 

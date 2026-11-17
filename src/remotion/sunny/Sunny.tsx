@@ -42,12 +42,15 @@ type EyeMode = "open" | "wide" | "blink" | "arc";
 
 const EXPRESSIONS: Record<
   Expression,
-  { l: EyeMode; r: EyeMode; browL: number; browR: number; mouth: MouthShape | "smile" }
+  { l: EyeMode; r: EyeMode; browL: number; browR: number; tilt?: number; mouth: MouthShape | "smile" | "frown" | "smirk" }
 > = {
   happy: { l: "open", r: "open", browL: 0, browR: 0, mouth: "smile" },
   wink: { l: "arc", r: "open", browL: -2, browR: 6, mouth: "X" },
   surprised: { l: "wide", r: "wide", browL: 9, browR: 9, mouth: "E" },
   laughing: { l: "arc", r: "arc", browL: 2, browR: 2, mouth: "D" },
+  deadpan: { l: "open", r: "open", browL: -3, browR: -3, mouth: "A" },
+  annoyed: { l: "open", r: "open", browL: -2, browR: -2, tilt: 8, mouth: "frown" },
+  smirk: { l: "open", r: "arc", browL: 4, browR: -2, mouth: "smirk" },
 };
 
 const Eye: React.FC<{ side: "l" | "r"; mode: EyeMode; lookX: number }> = ({ side, mode, lookX }) => {
@@ -75,9 +78,13 @@ const Eye: React.FC<{ side: "l" | "r"; mode: EyeMode; lookX: number }> = ({ side
   );
 };
 
-const Brow: React.FC<{ cx: number; lift: number }> = ({ cx, lift }) => {
+/** `tilt` > 0 pulls the inner end of the brow down (annoyed). */
+const Brow: React.FC<{ cx: number; lift: number; tilt?: number }> = ({ cx, lift, tilt = 0 }) => {
   const y = -56 - lift;
-  return <path d={`M ${cx - 13} ${y + 3} Q ${cx} ${y - 6} ${cx + 13} ${y + 3}`} fill="none" stroke={O} strokeWidth={5} strokeLinecap="round" />;
+  const inner = cx < 0 ? 1 : -1; // inner end points towards the nose
+  const yl = y + 3 + (inner === -1 ? tilt : -tilt * 0.3);
+  const yr = y + 3 + (inner === 1 ? tilt : -tilt * 0.3);
+  return <path d={`M ${cx - 13} ${yl} Q ${cx} ${y - 6} ${cx + 13} ${yr}`} fill="none" stroke={O} strokeWidth={5} strokeLinecap="round" />;
 };
 
 type MouthDef = {
@@ -88,7 +95,11 @@ type MouthDef = {
   teeth?: string;
 };
 
-const MOUTHS: Record<MouthShape | "smile", MouthDef> = {
+export type MouthKey = MouthShape | "smile" | "frown" | "smirk";
+
+const MOUTHS: Record<MouthKey, MouthDef> = {
+  frown: { line: "M -18 44 Q 0 32 18 44" },
+  smirk: { line: "M -18 38 Q 4 42 20 30" },
   smile: { d: "M -26 28 Q 0 31 26 28 Q 24 62 0 62 Q -24 62 -26 28 Z", tongue: [0, 54, 12, 6] },
   X: { line: "M -22 30 Q 0 48 22 30" },
   A: { line: "M -16 37 Q 0 41 16 37" },
@@ -105,7 +116,7 @@ const MOUTHS: Record<MouthShape | "smile", MouthDef> = {
   H: { d: "M -22 28 Q 0 32 22 28 Q 20 58 0 58 Q -20 58 -22 28 Z", tongue: [0, 40, 9, 6] },
 };
 
-const Mouth: React.FC<{ shape: MouthShape | "smile" }> = ({ shape }) => {
+export const Mouth: React.FC<{ shape: MouthKey }> = ({ shape }) => {
   const m = MOUTHS[shape];
   if (m.line) return <path d={m.line} fill="none" stroke={O} strokeWidth={6} strokeLinecap="round" />;
   return (
@@ -210,8 +221,8 @@ export const Sunny: React.FC<SunnyPose> = ({
       {/* face */}
       <ellipse cx={-62} cy={22} rx={16} ry={10} fill={COLORS.cheek} opacity={0.6} />
       <ellipse cx={62} cy={22} rx={16} ry={10} fill={COLORS.cheek} opacity={0.6} />
-      <Brow cx={-34} lift={e.browL} />
-      <Brow cx={34} lift={e.browR} />
+      <Brow cx={-34} lift={e.browL} tilt={e.tilt} />
+      <Brow cx={34} lift={e.browR} tilt={e.tilt} />
       <Eye side="l" mode={el} lookX={lookX} />
       <Eye side="r" mode={er} lookX={lookX} />
       <Mouth shape={mouth ?? e.mouth} />

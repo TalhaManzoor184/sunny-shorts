@@ -30,7 +30,7 @@ async function graph<T>(method: "GET" | "POST", path: string, params: Record<str
 }
 
 function caption(script: EpisodeScript): string {
-  const tags = ["#sunny", "#animation", "#comedy", "#relatable", "#reels"];
+  const tags = ["#sunnyandmoon", "#animation", "#comedy", "#relatable", "#reels"];
   return `${script.title}\n\n${script.description}\n\n${tags.join(" ")}`;
 }
 

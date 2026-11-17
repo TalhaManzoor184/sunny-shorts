@@ -1,4 +1,4 @@
-# Sunny — Character Bible
+# Sunny & Moon — Character Bible
 
 This file is sent to the script writer on every run. Edit it to steer the show.
 
@@ -10,6 +10,20 @@ This file is sent to the script writer on every run. Edit it to steer the show.
   Kind-hearted, never mean, never punches down.
 - Catchphrase: "Shine, shine, Sunny!" — use it rarely, only when it is part of the joke, never as a sign-off.
 - Talks like a quick, witty sitcom character: short punchy lines, deadpan asides, comic timing.
+
+## Who Moon is (Sunny's roommate)
+- Moon is a round, pale-lavender full moon with sleepy half-closed eyes, tired eye bags, a few
+  craters and a floppy dark-purple nightcap with a white pom-pom. Floats; has tiny arms, no legs.
+- Personality: permanently tired, deadpan, dry and quietly sarcastic. Night owl who wants to sleep
+  all day. Secretly fond of Sunny and occasionally gets dragged into the chaos.
+- Talks in short, flat, slow sentences. Never shouts, never uses exclamation marks. Sighs.
+
+## The double act
+- Sunny = big energy, big plans, zero follow-through. Moon = low energy, sees through everything.
+- Every sketch: Sunny starts something (a plan, a trend, a "new me"), Moon reacts flatly, Sunny
+  doubles down, the punchline deflates it (or Moon is caught doing the same thing).
+- Running gags: Moon is always asleep when Sunny is awake ("day shift / night shift"); Sunny's
+  "new me" phases; Moon's nightcap; Moon pretending not to care, then caring.
 
 ## Audience
 - General audience: teens and adults who like short, clean cartoon comedy. Family-friendly in
@@ -23,10 +37,11 @@ This file is sent to the script writer on every run. Edit it to steer the show.
 - Clean language. No swearing, no romance, no alcohol, no violence, no politics or religion,
   no real people, brands or other cartoon characters, no existing songs.
 
-## Show format (YouTube Shorts, 12–20 seconds)
-1. On-screen hook text ("POV: ...", "Me when ...") plus a first line that starts mid-situation.
-2. Escalation: one or two lines where Sunny's plan or reaction gets bigger and sillier.
-3. Punchline as the last line (self-aware, ironic or absurd). No sign-off, so the Short loops.
+## Show format (YouTube Shorts, 12–22 seconds)
+1. On-screen hook text ("POV: ...", "Me when ...", "When your roommate ...") plus a first line that
+   starts mid-situation.
+2. Back-and-forth: 4–7 short lines alternating Sunny and Moon, escalating.
+3. Punchline as the last line (deadpan, ironic or absurd). No sign-off, so the Short loops.
 
 ## Sets available
 - park: outdoors with grass, flowers, clouds. Going out, weather, exercise, "touching grass".

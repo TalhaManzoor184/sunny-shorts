@@ -29,10 +29,16 @@ export const config = {
   geminiTtsFallback: opt("GEMINI_TTS_FALLBACK", "gemini-3.8-flash-lite-tts"),
   /** Prebuilt voice. Upbeat/youthful ones suit Sunny: Puck, Leda, Sadachbia, Laomedeia, Fenrir. */
   geminiVoice: opt("GEMINI_VOICE", "Puck"),
+  /** Moon's voice: low, slow and dry. Other good fits: Charon, Enceladus, Gacrux. */
+  geminiMoonVoice: opt("GEMINI_MOON_VOICE", "Algenib"),
+  geminiMoonStyle: opt("GEMINI_MOON_STYLE", "flat, slow, sleepy and deadpan, dry sarcasm, small tired sighs, never shouts"),
+  /** 1.0 = Moon's voice unchanged (VOICE_PITCH only affects Sunny). */
+  moonPitch: Number(opt("MOON_PITCH", "1.0")),
+  elevenMoonVoiceId: opt("ELEVENLABS_MOON_VOICE_ID"),
   /** Delivery direction sent with every line (not spoken). */
   geminiStyle: opt(
     "GEMINI_STYLE",
-    "bright, upbeat and playful cartoon character with sitcom comic timing; clear and not too fast",
+    "bright, fast, over-excited and playful, sitcom comic timing, clear",
   ),
   elevenVoiceId: opt("ELEVENLABS_VOICE_ID"),
   elevenModel: opt("ELEVENLABS_MODEL", "eleven_multilingual_v2"),

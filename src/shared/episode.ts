@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 /** Things Sunny can show on his face. Matches the rig's expression set. */
-export const Expression = z.enum(["happy", "wink", "surprised", "laughing"]);
+/** Both characters understand all of these; each draws them its own way. */
+export const Expression = z.enum(["happy", "wink", "surprised", "laughing", "deadpan", "annoyed", "smirk"]);
 export type Expression = z.infer<typeof Expression>;
 
 /** Body animation for a beat. */
@@ -12,8 +13,13 @@ export type Action = z.infer<typeof Action>;
 export const Scene = z.enum(["park", "bedroom", "rainbow"]);
 export type Scene = z.infer<typeof Scene>;
 
+/** Who says a line. Older scripts without it are all Sunny. */
+export const Speaker = z.enum(["sunny", "moon"]);
+export type Speaker = z.infer<typeof Speaker>;
+
 /** One spoken line of the episode. */
 export const Beat = z.object({
+  speaker: Speaker.default("sunny"),
   line: z.string().min(1).max(140),
   expression: Expression,
   action: Action,

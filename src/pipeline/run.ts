@@ -108,7 +108,7 @@ async function main() {
   // 2 + 3. Voice (one request for the whole episode where possible), then lip sync per line
   const files = script.beats.map((_, i) => `line-${String(i + 1).padStart(2, "0")}.wav`);
   const voices = await voiceEpisode(
-    script.beats.map((b) => b.line),
+    script.beats.map((b) => ({ text: b.line, speaker: b.speaker })),
     files.map((f) => path.join(publicDir, f)),
   );
   const beats: RenderedBeat[] = [];

@@ -1,6 +1,6 @@
 # Sunny Shorts
 
-A daily YouTube Shorts pipeline for **Sunny the Dancing Star**, a cartoon comedy for a general audience.
+A daily YouTube Shorts pipeline for **Sunny & Moon**, a cartoon double act for a general audience: Sunny (an over-excited star) and Moon (his tired, deadpan roommate).
 
 Each run takes about 3–5 minutes:
 
@@ -9,8 +9,9 @@ Gemini writes the script ─► Gemini TTS voices each line ─► Rhubarb makes
         ─► Remotion renders a 1080×1920 MP4 ─► YouTube API uploads it
 ```
 
-Sunny is drawn in code (`src/remotion/sunny/Sunny.tsx`), so he looks exactly the same in every
-episode. Only his pose, expression and mouth change.
+Both characters are drawn in code (`src/remotion/sunny/Sunny.tsx`, `src/remotion/moon/Moon.tsx`), so they look exactly the same in every
+episode. Only pose, expression and mouth change. Each line has a `speaker`; Gemini voices both characters in one multi-speaker request
+(`GEMINI_VOICE` for Sunny, `GEMINI_MOON_VOICE` for Moon).
 
 ## Project layout
 

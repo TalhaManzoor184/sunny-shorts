@@ -1,10 +1,11 @@
 import React from "react";
 import { AbsoluteFill, Audio, Easing, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
-import type { EpisodeProps, MouthShape, RenderedBeat } from "../shared/episode";
+import type { EpisodeProps, Expression, MouthShape, RenderedBeat, Speaker } from "../shared/episode";
 import { computeTimeline } from "../shared/timeline";
 import { Captions } from "./Captions";
 import { blendedPose } from "./pose";
 import { MusicNotes, SceneBackground } from "./scenes/Scenes";
+import { Moon, MoonDefs } from "./moon/Moon";
 import { COLORS, Sunny, SunnyDefs } from "./sunny/Sunny";
 
 const FONT = "Fredoka, 'Arial Rounded MT Bold', sans-serif";
@@ -100,50 +101,114 @@ export const Episode: React.FC<EpisodeProps> = (props) => {
   const local = sec - tl.beatStarts[idx];
   const inOutro = sec >= tl.outroStart;
 
-  const pose = blendedPose(beat.action, Math.min(local, beat.duration + 0.4));
+  const t = Math.min(local, beat.duration + 0.4);
   const mouth = inOutro ? null : mouthAt(beat, local);
-  const blink = frame % 96 < 4;
   const scene = beat.scene ?? props.scene;
+  const duo = props.beats.some((b) => b.speaker === "moon");
+  const speaker: Speaker = duo ? beat.speaker : "sunny";
 
-  // Camera: small punch-in on every new line; on the punchline, zoom towards the face with a shake.
+  // The listener keeps the face from their own last line (or their default).
+  const lastFace = (who: Speaker): Expression => {
+    for (let i = idx; i >= 0; i--) if (props.beats[i].speaker === who) return props.beats[i].expression;
+    return who === "moon" ? "deadpan" : "happy";
+  };
+  const sunnyFace = speaker === "sunny" ? beat.expression : lastFace("sunny");
+  const moonFace = speaker === "moon" ? beat.expression : lastFace("moon");
+
+  const talking = blendedPose(beat.action, t);
+  const idle = blendedPose("idle", sec);
+  const sunnyPose = speaker === "sunny" ? talking : idle;
+  const moonPose = speaker === "moon" ? talking : idle;
+
+  // Moon floats low on the left, Sunny stands on the right; both stay below the caption area.
+  const SUN = duo ? { x: 380, y: 612, s: 0.82 } : { x: 270, y: 590, s: 1.05 };
+  const MOON = { x: 138, y: 556, s: 0.74 };
+  const moonBob = Math.sin(frame / 22) * 7 + moonPose.y * 0.6;
+
+  // Camera: lean towards whoever is talking; small punch-in on every new line;
+  // on the punchline, zoom into the speaker's face with a shake.
   const beatFrame = Math.round(local * fps);
+  const panFor = (who: Speaker) => (!duo ? 0 : who === "moon" ? 24 : -22);
+  const prevSpeaker: Speaker = idx > 0 && duo ? props.beats[idx - 1].speaker : speaker;
+  const camX = interpolate(beatFrame, [0, 8], [panFor(prevSpeaker), panFor(speaker)], {
+    extrapolateRight: "clamp",
+    easing: Easing.inOut(Easing.cubic),
+  });
   let zoom = interpolate(beatFrame, [0, 8], [1.04, 1], { extrapolateRight: "clamp" });
   let shakeX = 0;
   let shakeY = 0;
   if (beat.punchline) {
     zoom = interpolate(beatFrame, [0, 6], [1, 1.24], { extrapolateRight: "clamp", easing: Easing.out(Easing.back(2)) });
-    const s = interpolate(beatFrame, [0, 10], [7, 0], { extrapolateRight: "clamp" });
-    shakeX = Math.sin(beatFrame * 2.7) * s;
-    shakeY = Math.cos(beatFrame * 3.1) * s * 0.6;
+    const sh = interpolate(beatFrame, [0, 10], [7, 0], { extrapolateRight: "clamp" });
+    shakeX = Math.sin(beatFrame * 2.7) * sh;
+    shakeY = Math.cos(beatFrame * 3.1) * sh * 0.6;
   }
-  const focusY = beat.punchline ? 560 : 480;
-  const capAppear = 1; // captions fully visible from the first frame of each line
+  const focus = beat.punchline
+    ? speaker === "moon"
+      ? { x: MOON.x, y: MOON.y + moonBob }
+      : { x: SUN.x, y: SUN.y - 30 }
+    : { x: 270, y: 480 };
+  const tone = speaker === "moon" ? { color: "#CDBBFF", name: "MOON" } : { color: COLORS.yellow, name: "SUNNY" };
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#7FD3FF" }}>
       <svg viewBox="0 0 540 960" width="100%" height="100%">
         <SunnyDefs />
-        <g transform={`translate(${270 + shakeX} ${focusY + shakeY}) scale(${zoom.toFixed(4)}) translate(-270 -${focusY})`}>
-          <SceneBackground scene={scene} f={frame} />
-          <MusicNotes f={frame} />
-          {beat.punchline && <ImpactBurst f={beatFrame} />}
-          <ellipse cx={270} cy={782} rx={112 * (1 + pose.y / 300)} ry={13} fill="#000" opacity={0.16} />
-          <g transform={`translate(270 ${(590 + pose.y).toFixed(1)}) rotate(${pose.tilt.toFixed(2)}) scale(${(1.05 * pose.scaleX).toFixed(3)} 1.05)`}>
-            <Sunny
-              expression={beat.expression}
-              mouth={mouth}
-              blink={blink}
-              armL={pose.armL}
-              armR={pose.armR}
-              legL={pose.legL}
-              legR={pose.legR}
-              lookX={Math.sin(frame / 45) * 2}
-            />
+        <MoonDefs />
+        <g transform={`translate(${camX.toFixed(2)} 0)`}>
+          <g transform={`translate(${focus.x + shakeX} ${focus.y + shakeY}) scale(${zoom.toFixed(4)}) translate(${-focus.x} ${-focus.y})`}>
+            <g transform={`translate(${-camX.toFixed(2)} 0)`}>
+              <SceneBackground scene={scene} f={frame} />
+            </g>
+            <MusicNotes f={frame} />
+            {beat.punchline && (
+              <g transform={`translate(${(speaker === "moon" ? MOON.x : SUN.x) - 270} ${(speaker === "moon" ? MOON.y : SUN.y) - 590})`}>
+                <ImpactBurst f={beatFrame} />
+              </g>
+            )}
+            {duo && (
+              <>
+                <ellipse cx={MOON.x} cy={782} rx={70 - moonBob * 0.6} ry={9} fill="#000" opacity={0.1} />
+                <g
+                  transform={`translate(${MOON.x} ${(MOON.y + moonBob).toFixed(1)}) rotate(${(moonPose.tilt * 0.7).toFixed(2)}) scale(${(MOON.s * moonPose.scaleX).toFixed(3)} ${MOON.s})`}
+                >
+                  <Moon
+                    expression={moonFace}
+                    mouth={speaker === "moon" ? mouth : null}
+                    blink={(frame + 40) % 110 < 5}
+                    armL={28 + (moonPose.armL + 8)}
+                    armR={28 + (moonPose.armR + 8)}
+                    lookX={speaker === "moon" ? Math.sin(frame / 45) * 2 : 4}
+                  />
+                </g>
+              </>
+            )}
+            <ellipse cx={SUN.x} cy={782} rx={(SUN.s / 1.05) * 112 * (1 + sunnyPose.y / 300)} ry={13} fill="#000" opacity={0.16} />
+            <g
+              transform={`translate(${SUN.x} ${(SUN.y + sunnyPose.y).toFixed(1)}) rotate(${sunnyPose.tilt.toFixed(2)}) scale(${(SUN.s * sunnyPose.scaleX).toFixed(3)} ${SUN.s})`}
+            >
+              <Sunny
+                expression={sunnyFace}
+                mouth={speaker === "sunny" ? mouth : null}
+                blink={frame % 96 < 4}
+                armL={sunnyPose.armL}
+                armR={sunnyPose.armR}
+                legL={sunnyPose.legL}
+                legR={sunnyPose.legR}
+                lookX={speaker === "sunny" || !duo ? Math.sin(frame / 45) * 2 : -4}
+              />
+            </g>
           </g>
         </g>
         {props.hook && <HookBanner text={props.hook} frame={frame} />}
         <g transform="translate(0 85)">
-          <Captions words={beat.words} t={inOutro ? beat.duration : local} appear={capAppear} />
+          <Captions
+            words={beat.words}
+            t={inOutro ? beat.duration : local}
+            appear={1}
+            activeColor={tone.color}
+            label={duo ? { text: tone.name, fill: tone.color } : undefined}
+          />
         </g>
       </svg>
 

@@ -64,7 +64,7 @@ type CreatorInfo = {
 };
 
 function caption(script: EpisodeScript): string {
-  const tags = ["#sunny", "#animation", "#comedy", "#relatable", "#fyp"];
+  const tags = ["#sunnyandmoon", "#animation", "#comedy", "#relatable", "#fyp"];
   return `${script.title}\n\n${script.description}\n\n${tags.join(" ")}`.slice(0, 2200);
 }
 

@@ -22,13 +22,18 @@ const EPISODE_SCHEMA = {
     scene: { type: "string", enum: ["park", "bedroom", "rainbow"] },
     beats: {
       type: "array",
-      description: "3–6 spoken lines in order. Exactly one line is the punchline (usually the last).",
+      description: "4–7 lines of dialogue between Sunny and Moon, in order. Exactly one line is the punchline (usually the last).",
       items: {
         type: "object",
-        required: ["line", "expression", "action"],
+        required: ["speaker", "line", "expression", "action"],
         properties: {
-          line: { type: "string", description: "What Sunny says. 3–14 words. Punchy, conversational English." },
-          expression: { type: "string", enum: ["happy", "wink", "surprised", "laughing"] },
+          speaker: { type: "string", enum: ["sunny", "moon"], description: "Who says this line." },
+          line: { type: "string", description: "What the speaker says. 2–14 words. Punchy, conversational English." },
+          expression: {
+            type: "string",
+            enum: ["happy", "wink", "surprised", "laughing", "deadpan", "annoyed", "smirk"],
+            description: "The speaker's face on this line. Moon is usually deadpan, annoyed or smirk; Sunny is usually happy, surprised or laughing.",
+          },
           action: { type: "string", enum: ["idle", "dance", "wave", "jump", "spin"] },
           scene: { type: "string", enum: ["park", "bedroom", "rainbow"], description: "Optional set change for this line." },
           punchline: { type: "boolean", description: "true on the one line where the joke lands." },
@@ -41,7 +46,7 @@ const EPISODE_SCHEMA = {
 async function buildPrompt(history: HistoryEntry[]): Promise<string> {
   const bible = await fs.readFile(config.paths.bible, "utf8");
   const recent = history.slice(-30).map((h) => `- ${h.date}: ${h.title} (theme: ${h.theme})`).join("\n") || "- none yet";
-  return `You write daily YouTube Shorts comedy episodes for a cartoon character aimed at a general audience (teens and adults).
+  return `You write daily YouTube Shorts comedy sketches for a cartoon double act, Sunny and Moon, aimed at a general audience (teens and adults).
 
 <character_bible>
 ${bible}
@@ -53,7 +58,9 @@ ${recent}
 
 Write today's episode. Requirements:
 - Pick a theme that is NOT in the recent episodes list (vary the theme family too, not just the wording).
-- SHORT: 3–6 lines, 25–50 spoken words in total, so the Short is 12–20 seconds. Cut every word that is not setup or joke.
+- It is a DIALOGUE: Sunny and Moon take turns (both must speak; nobody talks to the camera alone). 4–7 lines, 30–60 spoken words in total, so the Short is 12–22 seconds. Cut every word that is not setup or joke.
+- The comedy comes from the contrast: Sunny is over-excited and has a big plan or a bold claim; Moon is tired, deadpan and dry and deflates it. Sunny doubles down. Let the punchline land on one of them (often Moon's flat one-liner, sometimes Sunny's absurd comeback or a twist where Moon secretly loves it).
+- Moon's lines are short (2–8 words). Moon never shouts and never uses exclamation marks.
 - The first spoken line must grab attention in under two seconds: start in the middle of the situation, no greetings, no "hi", no introductions.
 - The hook text and the first line work together but do not repeat each other word for word.
 - Mark exactly one line with punchline: true. End on the joke (the punchline is usually the last line), so the Short loops straight back to the start.

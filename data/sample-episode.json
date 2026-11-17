@@ -1,13 +1,16 @@
 {
-  "title": "When Your Phone Hits 1% 🔋",
-  "description": "Sunny handles a dying phone with total calm. Totally. Calm.",
-  "tags": ["relatable", "phone battery", "1 percent battery", "funny shorts", "cartoon comedy", "animation", "Sunny the star", "everyday life", "comedy shorts"],
-  "theme": "phone battery at 1%",
-  "hook": "POV: your phone hits 1%",
+  "title": "Sunny's 6 AM Gym Era Lasted 4 Minutes 💪",
+  "description": "Sunny starts a brand new fitness journey. Moon has seen this movie before.",
+  "tags": ["relatable", "gym motivation", "new me", "funny shorts", "cartoon comedy", "animation", "roommates", "Sunny and Moon", "comedy shorts"],
+  "theme": "new-me gym motivation",
+  "hook": "POV: your roommate's 'new me' era",
   "scene": "bedroom",
   "beats": [
-    { "line": "One percent. Okay. Nobody panic. Where is the charger?!", "expression": "surprised", "action": "spin" },
-    { "line": "Found it! Plugged in! I am a genius!", "expression": "laughing", "action": "dance", "scene": "rainbow" },
-    { "line": "Wait. The plug was never in the wall.", "expression": "surprised", "action": "idle", "scene": "rainbow", "punchline": true }
+    { "speaker": "sunny", "line": "Moon! Wake up! It's 6 AM! New me starts today!", "expression": "laughing", "action": "jump" },
+    { "speaker": "moon", "line": "You said that on Monday.", "expression": "deadpan", "action": "idle" },
+    { "speaker": "sunny", "line": "That was the old new me. This is the new new me!", "expression": "surprised", "action": "dance", "scene": "park" },
+    { "speaker": "moon", "line": "Where are you now?", "expression": "annoyed", "action": "idle", "scene": "park" },
+    { "speaker": "sunny", "line": "Bed. The new me needs a rest day.", "expression": "wink", "action": "idle", "scene": "bedroom" },
+    { "speaker": "moon", "line": "Finally. Something we agree on.", "expression": "smirk", "action": "idle", "scene": "bedroom", "punchline": true }
   ]
 }

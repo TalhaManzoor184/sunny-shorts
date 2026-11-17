@@ -22,9 +22,9 @@ export function publishAtIso(now = new Date()): string {
 
 const FOOTER = `
 
-Sunny the star vs. everyday life. A new short every day.
+Sunny (too much energy) and Moon (not enough). A new sketch every day.
 
-#Shorts #Comedy #Relatable #Animation #Sunny`;
+#Shorts #Comedy #Relatable #Animation #SunnyAndMoon`;
 
 export async function uploadShort(file: string, script: EpisodeScript): Promise<{ videoId: string; publishAt?: string }> {
   const yt = youtubeClient();

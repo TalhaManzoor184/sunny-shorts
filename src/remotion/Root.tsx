@@ -15,6 +15,7 @@ const PREVIEW: EpisodeProps = {
   outroSeconds: 0.5,
   beats: [
     {
+      speaker: "sunny",
       line: "Hi friends! It's me, Sunny!",
       expression: "happy",
       action: "wave",
