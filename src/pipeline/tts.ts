@@ -75,7 +75,7 @@ function voiceOf(speaker: Speaker): { voice: string; style: string; name: string
     : { voice: config.geminiVoice, style: config.geminiStyle, name: "Sunny" };
 }
 
-type GeminiVoices = { single: Speaker } | { duo: true };
+type GeminiVoices = { single: Speaker } | { duo: Line[] };
 
 async function gemini(text: string, rawPath: string, speaker: Speaker = "sunny"): Promise<null> {
   return geminiWith(text, rawPath, { single: speaker });
@@ -97,7 +97,7 @@ async function geminiOnce(model: string, text: string, rawPath: string, voices: 
   const style = duo
     ? `A two-character cartoon comedy. ${voiceOf("sunny").name}: ${voiceOf("sunny").style}. ${voiceOf("moon").name}: ${voiceOf("moon").style}. Leave a short pause between turns.`
     : one.style;
-  // Multi-speaker: name both speakers; the text uses "Sunny: …" / "Moon: …" turns.
+  // Multi-speaker: name both speakers, and send every line as its own text turn tagged with its speaker.
   const speechConfig = duo
     ? (["sunny", "moon"] as const).map((s) => ({ speaker: voiceOf(s).name, voice: voiceOf(s).voice, language: "en-US" }))
     : [{ voice: one.voice, language: "en-US" }];
@@ -107,13 +107,13 @@ async function geminiOnce(model: string, text: string, rawPath: string, voices: 
     input: [
       {
         type: "user_input",
-        content: [
-          {
-            type: "text",
-            text,
-            annotations: style ? [{ type: "speech_metadata", style }] : undefined,
-          },
-        ],
+        content: duo
+          ? voices.duo.map((l, i) => ({
+              type: "text" as const,
+              text: i < voices.duo.length - 1 ? `${l.text} <short pause>` : l.text,
+              annotations: [{ type: "speech_metadata" as const, speaker: voiceOf(l.speaker).name, style: i === 0 ? style : voiceOf(l.speaker).style }],
+            }))
+          : [{ type: "text" as const, text, annotations: style ? [{ type: "speech_metadata" as const, style }] : undefined }],
       },
     ],
     response_format: { type: "audio", mime_type: "audio/wav" },
@@ -213,15 +213,20 @@ export async function voiceEpisode(input: Line[], outWavs: string[]): Promise<Vo
   const duo = input.some((l) => l.speaker === "moon") && input.some((l) => l.speaker === "sunny");
   if (config.ttsProvider === "gemini" && lines.length > 1) {
     const raw = path.join(path.dirname(outWavs[0]), "episode.raw.wav");
+    let ok = true;
     if (duo) {
-      // One multi-speaker request: "Sunny: …" / "Moon: …" turns.
-      const transcript = input.map((l) => `${voiceOf(l.speaker).name}: ${l.text} <short pause>`).join("\n");
-      await geminiWith(transcript, raw, { duo: true });
+      // One multi-speaker request; every line is its own turn tagged with its speaker.
+      try {
+        await geminiWith(lines.join("\n"), raw, { duo: input });
+      } catch (err) {
+        ok = false;
+        console.warn(`  Two-voice request failed (${String((err as Error)?.message ?? err).slice(0, 200)}); voicing line by line instead.`);
+      }
     } else {
       await gemini(lines.join("\n<short pause>\n"), raw, input[0].speaker);
     }
-    const total = await durationOf(raw);
-    const cuts = chooseCuts(await findSilences(raw), lines, total);
+    const total = ok ? await durationOf(raw) : 0;
+    const cuts = ok ? chooseCuts(await findSilences(raw), lines, total) : null;
     if (cuts) {
       const bounds = [0, ...cuts, total];
       const voiced: Voiced[] = [];
@@ -236,7 +241,7 @@ export async function voiceEpisode(input: Line[], outWavs: string[]): Promise<Vo
       await fs.rm(raw, { force: true });
       return voiced;
     }
-    console.warn("  Could not find a pause between every line; voicing line by line instead.");
+    if (ok) console.warn("  Could not find a pause between every line; voicing line by line instead.");
     await fs.rm(raw, { force: true });
   }
   const voiced: Voiced[] = [];
