@@ -1,0 +1,54 @@
+name: Archive past episodes (run once)
+
+# Copies episodes that only exist as 14-day run artifacts into the "episode-archive" release,
+# so compilations can use them. Safe to run again: files are replaced, not duplicated.
+# The first episodes' artifacts expire on 6 Nov 2026, so run this before then.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write # create the release and upload files
+  actions: read # list and download run artifacts
+
+jobs:
+  backfill:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Download episode artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p artifacts
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts" --paginate \
+            -q '.artifacts[] | select(.expired == false and (.name | startswith("episode-"))) | .id' |
+          while read -r id; do
+            mkdir -p "artifacts/$id"
+            gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" > "artifacts/$id/a.zip"
+            unzip -oq "artifacts/$id/a.zip" -d "artifacts/$id" && rm "artifacts/$id/a.zip"
+          done
+
+      - name: Keep only uploaded episodes, named for compilations
+        run: npx tsx src/scripts/archive-collect.ts --out=archive artifacts
+
+      - name: Upload to the episode-archive release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          files=(archive/*.mp4)
+          [ ${#files[@]} -eq 0 ] && { echo "Nothing to archive."; exit 0; }
+          gh release view episode-archive >/dev/null 2>&1 || gh release create episode-archive \
+            --title "Episode archive" --latest=false \
+            --notes "Every uploaded Sunny short, kept for compilations. Named <date>_<videoId>.mp4."
+          gh release upload episode-archive "${files[@]}" --clobber
+          echo "::notice title=Archived ${#files[@]} episodes::$(ls archive | tr '\n' ' ')"
