@@ -1,6 +1,8 @@
 # Sunny Shorts
 
-A daily YouTube Shorts pipeline for **Sunny & Moon**, a cartoon double act for a general audience: Sunny (an over-excited star) and Moon (his tired, deadpan roommate).
+A daily YouTube Shorts pipeline for **Sunny y Luna**, a Spanish-language cartoon double act for a general audience: Sunny (an over-excited star) and Luna (the tired, deadpan moon who shares the room).
+
+Everything the audience sees or hears is in Spanish (neutral Latin American). Language settings: `CONTENT_LANGUAGE` (default `es`), `VOICE_LANGUAGE` (`es-US`), `SCRIPT_LANGUAGE`, and `MOON_NAME` (`Luna`). In code the second character's id stays `moon`.
 
 Each run takes about 3–5 minutes:
 
@@ -11,7 +13,7 @@ Gemini writes the script ─► Gemini TTS voices each line ─► Rhubarb makes
 
 Both characters are drawn in code (`src/remotion/sunny/Sunny.tsx`, `src/remotion/moon/Moon.tsx`), so they look exactly the same in every
 episode. Only pose, expression and mouth change. Each line has a `speaker`; Gemini voices both characters in one multi-speaker request
-(`GEMINI_VOICE` for Sunny, `GEMINI_MOON_VOICE` for Moon).
+(`GEMINI_VOICE` for Sunny, `GEMINI_MOON_VOICE` for Luna, default `Gacrux`).
 
 ## Project layout
 

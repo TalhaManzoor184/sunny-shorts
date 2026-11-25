@@ -148,7 +148,7 @@ export const Episode: React.FC<EpisodeProps> = (props) => {
       ? { x: MOON.x, y: MOON.y + moonBob }
       : { x: SUN.x, y: SUN.y - 30 }
     : { x: 270, y: 480 };
-  const tone = speaker === "moon" ? { color: "#CDBBFF", name: "MOON" } : { color: COLORS.yellow, name: "SUNNY" };
+  const tone = speaker === "moon" ? { color: "#CDBBFF", name: (props.moonName ?? "Moon").toUpperCase() } : { color: COLORS.yellow, name: "SUNNY" };
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#7FD3FF" }}>

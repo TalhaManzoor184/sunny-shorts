@@ -11,28 +11,28 @@ const EPISODE_SCHEMA = {
   type: "object",
   required: ["title", "description", "tags", "theme", "hook", "scene", "beats"],
   properties: {
-    title: { type: "string", description: "YouTube title, max 70 characters, relatable and funny, no clickbait, ends with a relevant emoji. Not aimed at children." },
-    description: { type: "string", description: "2–3 short, funny sentences describing the joke without spoiling the punchline. No links." },
-    tags: { type: "array", items: { type: "string" }, description: "6–12 search tags." },
+    title: { type: "string", description: "YouTube title IN SPANISH, max 70 characters, relatable and funny, no clickbait, ends with a relevant emoji. Not aimed at children." },
+    description: { type: "string", description: "2–3 short, funny sentences IN SPANISH describing the joke without spoiling the punchline. No links." },
+    tags: { type: "array", items: { type: "string" }, description: "6–12 search tags IN SPANISH (what Spanish speakers type into YouTube search)." },
     theme: { type: "string", description: "The one idea of the episode, e.g. 'counting to 5 with claps'." },
     hook: {
       type: "string",
-      description: "On-screen text shown from the very first frame, max 40 characters, e.g. 'POV: your phone hits 1%' or 'Me trying to wake up on Monday'. Relatable, makes people stop scrolling.",
+      description: "On-screen text IN SPANISH shown from the very first frame, max 40 characters, e.g. 'POV: tu celular en 1%' or 'Yo intentando despertar el lunes'. Relatable, makes people stop scrolling.",
     },
     scene: { type: "string", enum: ["park", "bedroom", "rainbow"] },
     beats: {
       type: "array",
-      description: "4–7 lines of dialogue between Sunny and Moon, in order. Exactly one line is the punchline (usually the last).",
+      description: "4–7 lines of dialogue between Sunny and Luna (speaker id \"moon\"), in order. Exactly one line is the punchline (usually the last).",
       items: {
         type: "object",
         required: ["speaker", "line", "expression", "action"],
         properties: {
-          speaker: { type: "string", enum: ["sunny", "moon"], description: "Who says this line." },
-          line: { type: "string", description: "What the speaker says. 2–14 words. Punchy, conversational English." },
+          speaker: { type: "string", enum: ["sunny", "moon"], description: "Who says this line: sunny = Sunny, moon = Luna." },
+          line: { type: "string", description: "What the speaker says, IN SPANISH. 2–14 words. Punchy, conversational, natural spoken Spanish." },
           expression: {
             type: "string",
             enum: ["happy", "wink", "surprised", "laughing", "deadpan", "annoyed", "smirk"],
-            description: "The speaker's face on this line. Moon is usually deadpan, annoyed or smirk; Sunny is usually happy, surprised or laughing.",
+            description: "The speaker's face on this line. Luna is usually deadpan, annoyed or smirk; Sunny is usually happy, surprised or laughing.",
           },
           action: { type: "string", enum: ["idle", "dance", "wave", "jump", "spin"] },
           scene: { type: "string", enum: ["park", "bedroom", "rainbow"], description: "Optional set change for this line." },
@@ -46,7 +46,9 @@ const EPISODE_SCHEMA = {
 async function buildPrompt(history: HistoryEntry[]): Promise<string> {
   const bible = await fs.readFile(config.paths.bible, "utf8");
   const recent = history.slice(-30).map((h) => `- ${h.date}: ${h.title} (theme: ${h.theme})`).join("\n") || "- none yet";
-  return `You write daily YouTube Shorts comedy sketches for a cartoon double act, Sunny and Moon, aimed at a general audience (teens and adults).
+  return `You write daily YouTube Shorts comedy sketches for a cartoon double act, Sunny and Luna, aimed at a general Spanish-speaking audience (teens and adults).
+
+LANGUAGE: Write everything the audience will see or hear — title, description, tags, hook and every line — in ${config.scriptLanguage}. These instructions are in English, but the output must be entirely in Spanish, with correct accents and ¿ ¡ punctuation. Write jokes that are funny in Spanish (do not translate English jokes or idioms).
 
 <character_bible>
 ${bible}
@@ -58,9 +60,9 @@ ${recent}
 
 Write today's episode. Requirements:
 - Pick a theme that is NOT in the recent episodes list (vary the theme family too, not just the wording).
-- It is a DIALOGUE: Sunny and Moon take turns (both must speak; nobody talks to the camera alone). 4–7 lines, 30–60 spoken words in total, so the Short is 12–22 seconds. Cut every word that is not setup or joke.
-- The comedy comes from the contrast: Sunny is over-excited and has a big plan or a bold claim; Moon is tired, deadpan and dry and deflates it. Sunny doubles down. Let the punchline land on one of them (often Moon's flat one-liner, sometimes Sunny's absurd comeback or a twist where Moon secretly loves it).
-- Moon's lines are short (2–8 words). Moon never shouts and never uses exclamation marks.
+- It is a DIALOGUE: Sunny and Luna take turns (both must speak; nobody talks to the camera alone). 4–7 lines, 30–60 spoken words in total, so the Short is 12–22 seconds. Cut every word that is not setup or joke.
+- The comedy comes from the contrast: Sunny is over-excited and has a big plan or a bold claim; Luna is tired, deadpan and dry and deflates it. Sunny doubles down. Let the punchline land on one of them (often Luna's flat one-liner, sometimes Sunny's absurd comeback or a twist where Luna secretly loves it).
+- Luna's lines are short (2–8 words). Luna never shouts and never uses exclamation marks.
 - The first spoken line must grab attention in under two seconds: start in the middle of the situation, no greetings, no "hi", no introductions.
 - The hook text and the first line work together but do not repeat each other word for word.
 - Mark exactly one line with punchline: true. End on the joke (the punchline is usually the last line), so the Short loops straight back to the start.

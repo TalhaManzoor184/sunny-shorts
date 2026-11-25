@@ -1,16 +1,16 @@
 {
-  "title": "Sunny's 6 AM Gym Era Lasted 4 Minutes 💪",
-  "description": "Sunny starts a brand new fitness journey. Moon has seen this movie before.",
-  "tags": ["relatable", "gym motivation", "new me", "funny shorts", "cartoon comedy", "animation", "roommates", "Sunny and Moon", "comedy shorts"],
-  "theme": "new-me gym motivation",
-  "hook": "POV: your roommate's 'new me' era",
+  "title": "Sunny empezó el gym… por 4 minutos 💪",
+  "description": "Sunny arranca su nueva vida fitness. Luna ya vio esta película.",
+  "tags": ["humor", "comedia", "gym", "dieta el lunes", "roomie", "animación", "shorts de humor", "Sunny y Luna", "memes en español"],
+  "theme": "el nuevo yo del gym",
+  "hook": "POV: tu roomie en su etapa de 'ahora sí'",
   "scene": "bedroom",
   "beats": [
-    { "speaker": "sunny", "line": "Moon! Wake up! It's 6 AM! New me starts today!", "expression": "laughing", "action": "jump" },
-    { "speaker": "moon", "line": "You said that on Monday.", "expression": "deadpan", "action": "idle" },
-    { "speaker": "sunny", "line": "That was the old new me. This is the new new me!", "expression": "surprised", "action": "dance", "scene": "park" },
-    { "speaker": "moon", "line": "Where are you now?", "expression": "annoyed", "action": "idle", "scene": "park" },
-    { "speaker": "sunny", "line": "Bed. The new me needs a rest day.", "expression": "wink", "action": "idle", "scene": "bedroom" },
-    { "speaker": "moon", "line": "Finally. Something we agree on.", "expression": "smirk", "action": "idle", "scene": "bedroom", "punchline": true }
+    { "speaker": "sunny", "line": "¡Luna, despierta! ¡Son las seis! ¡Hoy empieza mi nuevo yo!", "expression": "laughing", "action": "jump" },
+    { "speaker": "moon", "line": "Eso dijiste el lunes.", "expression": "deadpan", "action": "idle" },
+    { "speaker": "sunny", "line": "Ese era el viejo nuevo yo. ¡Este es el nuevo nuevo yo!", "expression": "surprised", "action": "dance", "scene": "park" },
+    { "speaker": "moon", "line": "¿Y dónde estás ahora?", "expression": "annoyed", "action": "idle", "scene": "park" },
+    { "speaker": "sunny", "line": "En la cama. El nuevo yo necesita descansar.", "expression": "wink", "action": "idle", "scene": "bedroom" },
+    { "speaker": "moon", "line": "Por fin estamos de acuerdo.", "expression": "smirk", "action": "idle", "scene": "bedroom", "punchline": true }
   ]
 }

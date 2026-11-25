@@ -16,7 +16,9 @@ export async function mouthCues(wavPath: string, dialog: string): Promise<MouthC
   // Rhubarb wants 16-bit PCM WAV.
   await ffmpeg(["-i", wavPath, "-ac", "1", "-ar", "16000", "-sample_fmt", "s16", pcm]);
   await fs.writeFile(dialogFile, dialog);
-  await run(config.rhubarbPath, ["-q", "-f", "json", "--extendedShapes", "GHX", "-d", dialogFile, "-o", out, pcm], {
+  // Rhubarb's word recogniser is English-only; for other languages use its language-independent phonetic mode.
+  const english = config.voiceLanguage.toLowerCase().startsWith("en");
+  await run(config.rhubarbPath, ["-q", "-f", "json", "--extendedShapes", "GHX", ...(english ? ["-d", dialogFile] : ["-r", "phonetic"]), "-o", out, pcm], {
     maxBuffer: 16 * 1024 * 1024,
   });
   const json = JSON.parse(await fs.readFile(out, "utf8")) as { mouthCues: MouthCue[] };

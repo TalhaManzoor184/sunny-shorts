@@ -35,6 +35,8 @@ if (args.has("tts")) config.ttsProvider = args.get("tts") as typeof config.ttsPr
 
 const slug = (s: string) =>
   s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // "empezó" -> "empezo"
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
@@ -124,6 +126,7 @@ async function main() {
   const props: EpisodeProps = {
     title: script.title,
     hook: script.hook,
+    moonName: config.moonName,
     scene: script.scene,
     beats,
     musicFile: await pickMusic(publicDir),

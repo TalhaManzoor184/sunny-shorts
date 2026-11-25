@@ -15,6 +15,16 @@ export function req(name: string): string {
 }
 
 export const config = {
+  // Language of everything the audience sees and hears (script, voice, captions, titles).
+  /** ISO code for YouTube metadata, e.g. "es". */
+  contentLanguage: opt("CONTENT_LANGUAGE", "es"),
+  /** BCP-47 code for the voice, e.g. "es-US" (neutral Latin American Spanish). */
+  voiceLanguage: opt("VOICE_LANGUAGE", "es-US"),
+  /** Plain-language description given to the script writer. */
+  scriptLanguage: opt("SCRIPT_LANGUAGE", "neutral Latin American Spanish (understood from Mexico to Argentina and by US Hispanics; avoid Spain-only words and heavy local slang)"),
+  /** On-screen / spoken name of the second character (internal id stays "moon"). */
+  moonName: opt("MOON_NAME", "Luna"),
+
   // Script writer: gemini (default) or claude
   scriptProvider: opt("SCRIPT_PROVIDER", "gemini") as "gemini" | "claude",
   geminiTextModel: opt("GEMINI_TEXT_MODEL", "gemini-3.8-flash"),
@@ -29,8 +39,8 @@ export const config = {
   geminiTtsFallback: opt("GEMINI_TTS_FALLBACK", "gemini-3.8-flash-lite-tts"),
   /** Prebuilt voice. Upbeat/youthful ones suit Sunny: Puck, Leda, Sadachbia, Laomedeia, Fenrir. */
   geminiVoice: opt("GEMINI_VOICE", "Puck"),
-  /** Moon's voice: low, slow and dry. Other good fits: Charon, Enceladus, Gacrux. */
-  geminiMoonVoice: opt("GEMINI_MOON_VOICE", "Algenib"),
+  /** Luna's voice: low, slow and dry. Other good fits: Kore, Sulafat (female) or Algenib, Charon (male). */
+  geminiMoonVoice: opt("GEMINI_MOON_VOICE", "Gacrux"),
   geminiMoonStyle: opt("GEMINI_MOON_STYLE", "flat, slow, sleepy and deadpan, dry sarcasm, small tired sighs, never shouts"),
   /** 1.0 = Moon's voice unchanged (VOICE_PITCH only affects Sunny). */
   moonPitch: Number(opt("MOON_PITCH", "1.0")),

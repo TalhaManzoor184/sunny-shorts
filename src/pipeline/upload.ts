@@ -22,9 +22,9 @@ export function publishAtIso(now = new Date()): string {
 
 const FOOTER = `
 
-Sunny (too much energy) and Moon (not enough). A new sketch every day.
+Sunny (demasiada energía) y Luna (nada de energía). Un sketch nuevo cada día.
 
-#Shorts #Comedy #Relatable #Animation #SunnyAndMoon`;
+#Shorts #Humor #Comedia #Animación #SunnyYLuna`;
 
 export async function uploadShort(file: string, script: EpisodeScript): Promise<{ videoId: string; publishAt?: string }> {
   const yt = youtubeClient();
@@ -38,8 +38,8 @@ export async function uploadShort(file: string, script: EpisodeScript): Promise<
         description: (script.description + FOOTER).slice(0, 4900),
         tags: script.tags,
         categoryId: "1", // Film & Animation
-        defaultLanguage: "en",
-        defaultAudioLanguage: "en",
+        defaultLanguage: config.contentLanguage,
+        defaultAudioLanguage: config.contentLanguage,
       },
       status: {
         privacyStatus: config.uploadMode === "public" ? "public" : "private",

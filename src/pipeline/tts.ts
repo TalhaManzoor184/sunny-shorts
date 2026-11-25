@@ -71,7 +71,7 @@ async function elevenlabs(text: string, rawPath: string, speaker: Speaker = "sun
 /** Gemini voice name and speaking style for each character. */
 function voiceOf(speaker: Speaker): { voice: string; style: string; name: string } {
   return speaker === "moon"
-    ? { voice: config.geminiMoonVoice, style: config.geminiMoonStyle, name: "Moon" }
+    ? { voice: config.geminiMoonVoice, style: config.geminiMoonStyle, name: config.moonName }
     : { voice: config.geminiVoice, style: config.geminiStyle, name: "Sunny" };
 }
 
@@ -95,12 +95,12 @@ async function geminiOnce(model: string, text: string, rawPath: string, voices: 
   const duo = "duo" in voices;
   const one = duo ? voiceOf("sunny") : voiceOf(voices.single);
   const style = duo
-    ? `A two-character cartoon comedy. ${voiceOf("sunny").name}: ${voiceOf("sunny").style}. ${voiceOf("moon").name}: ${voiceOf("moon").style}. Leave a short pause between turns.`
+    ? `A two-character cartoon comedy, spoken in Spanish. ${voiceOf("sunny").name}: ${voiceOf("sunny").style}. ${voiceOf("moon").name}: ${voiceOf("moon").style}. Leave a short pause between turns.`
     : one.style;
   // Multi-speaker: name both speakers, and send every line as its own text turn tagged with its speaker.
   const speechConfig = duo
-    ? (["sunny", "moon"] as const).map((s) => ({ speaker: voiceOf(s).name, voice: voiceOf(s).voice, language: "en-US" }))
-    : [{ voice: one.voice, language: "en-US" }];
+    ? (["sunny", "moon"] as const).map((s) => ({ speaker: voiceOf(s).name, voice: voiceOf(s).voice, language: config.voiceLanguage }))
+    : [{ voice: one.voice, language: config.voiceLanguage }];
   const ai = new GoogleGenAI({ apiKey: req("GEMINI_API_KEY") });
   const interaction = await ai.interactions.create({
     model,
@@ -127,7 +127,8 @@ async function geminiOnce(model: string, text: string, rawPath: string, voices: 
 
 /** Offline robot voice for testing the pipeline without API keys. */
 async function espeak(text: string, rawPath: string, speaker: Speaker = "sunny"): Promise<null> {
-  const args = speaker === "moon" ? ["-v", "en-us+m3", "-p", "25", "-s", "125"] : ["-v", "en-us+f3", "-p", "75", "-s", "150"];
+  const lang = config.voiceLanguage.toLowerCase().startsWith("es") ? "es-419" : "en-us";
+  const args = speaker === "moon" ? ["-v", `${lang}+f4`, "-p", "35", "-s", "125"] : ["-v", `${lang}+m3`, "-p", "75", "-s", "155"];
   await run("espeak-ng", [...args, "-w", rawPath, text]);
   return null;
 }

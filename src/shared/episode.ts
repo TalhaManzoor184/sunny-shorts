@@ -63,6 +63,8 @@ export type EpisodeProps = {
   scene: Scene;
   beats: RenderedBeat[];
   hook?: string;
+  /** Display name of the second character in the name tag. */
+  moonName?: string;
   musicFile?: string; // relative to public dir
   /** Folder (relative to public dir) holding pop.wav, whoosh.wav, boom.wav, boing.wav. Empty = no SFX. */
   sfxDir?: string;
